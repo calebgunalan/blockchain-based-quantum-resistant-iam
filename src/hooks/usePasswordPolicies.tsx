@@ -9,10 +9,11 @@ export interface PasswordPolicy {
   require_lowercase: boolean;
   require_numbers: boolean;
   require_special_chars: boolean;
-  max_age_days: number;
-  prevent_reuse_count: number;
-  lockout_threshold: number;
+  password_expiry_days: number;
+  password_history_count: number;
+  max_login_attempts: number;
   lockout_duration_minutes: number;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -34,12 +35,12 @@ export function usePasswordPolicies() {
   const fetchPolicy = async () => {
     try {
       const { data, error } = await supabase
-        .from('password_policies' as any)
+        .from('password_policies')
         .select('*')
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
-      if (data) setPolicy(data as PasswordPolicy);
+      if (data) setPolicy(data);
     } catch (error) {
       console.error('Error fetching password policy:', error);
     } finally {
@@ -50,13 +51,13 @@ export function usePasswordPolicies() {
   const updatePolicy = async (updates: Partial<PasswordPolicy>) => {
     try {
       const { data, error } = await supabase
-        .from('password_policies' as any)
+        .from('password_policies')
         .upsert(updates)
         .select()
         .single();
 
       if (error) throw error;
-      if (data) setPolicy(data as PasswordPolicy);
+      if (data) setPolicy(data);
       return data;
     } catch (error) {
       console.error('Error updating password policy:', error);

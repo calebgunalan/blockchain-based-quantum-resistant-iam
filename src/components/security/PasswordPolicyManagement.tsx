@@ -13,15 +13,15 @@ export function PasswordPolicyManagement() {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
-    min_length: policy?.min_length || 8,
-    require_uppercase: policy?.require_uppercase || true,
-    require_lowercase: policy?.require_lowercase || true,
-    require_numbers: policy?.require_numbers || true,
-    require_special_chars: policy?.require_special_chars || true,
-    max_age_days: policy?.max_age_days || 90,
-    prevent_reuse_count: policy?.prevent_reuse_count || 5,
-    lockout_threshold: policy?.lockout_threshold || 5,
-    lockout_duration_minutes: policy?.lockout_duration_minutes || 30
+    min_length: policy?.min_length ?? 8,
+    require_uppercase: policy?.require_uppercase ?? true,
+    require_lowercase: policy?.require_lowercase ?? true,
+    require_numbers: policy?.require_numbers ?? true,
+    require_special_chars: policy?.require_special_chars ?? true,
+    password_expiry_days: policy?.password_expiry_days ?? 90,
+    password_history_count: policy?.password_history_count ?? 5,
+    max_login_attempts: policy?.max_login_attempts ?? 5,
+    lockout_duration_minutes: policy?.lockout_duration_minutes ?? 30
   });
 
   const handleSave = async () => {
@@ -69,7 +69,7 @@ export function PasswordPolicyManagement() {
             <Switch
               id="uppercase"
               checked={formData.require_uppercase}
-              onCheckedChange={(checked) => setFormData({ ...formData, require_uppercase: checked })}
+              onCheckedChange={(checked) => setFormData({ ...formData, require_uppercase: Boolean(checked) })}
             />
           </div>
 
@@ -78,7 +78,7 @@ export function PasswordPolicyManagement() {
             <Switch
               id="lowercase"
               checked={formData.require_lowercase}
-              onCheckedChange={(checked) => setFormData({ ...formData, require_lowercase: checked })}
+              onCheckedChange={(checked) => setFormData({ ...formData, require_lowercase: Boolean(checked) })}
             />
           </div>
 
@@ -87,7 +87,7 @@ export function PasswordPolicyManagement() {
             <Switch
               id="numbers"
               checked={formData.require_numbers}
-              onCheckedChange={(checked) => setFormData({ ...formData, require_numbers: checked })}
+              onCheckedChange={(checked) => setFormData({ ...formData, require_numbers: Boolean(checked) })}
             />
           </div>
 
@@ -96,7 +96,7 @@ export function PasswordPolicyManagement() {
             <Switch
               id="special"
               checked={formData.require_special_chars}
-              onCheckedChange={(checked) => setFormData({ ...formData, require_special_chars: checked })}
+              onCheckedChange={(checked) => setFormData({ ...formData, require_special_chars: Boolean(checked) })}
             />
           </div>
 
@@ -107,8 +107,8 @@ export function PasswordPolicyManagement() {
               type="number"
               min="0"
               max="365"
-              value={formData.max_age_days}
-              onChange={(e) => setFormData({ ...formData, max_age_days: parseInt(e.target.value) })}
+              value={formData.password_expiry_days}
+              onChange={(e) => setFormData({ ...formData, password_expiry_days: parseInt(e.target.value) })}
             />
             <p className="text-xs text-muted-foreground">Set to 0 to disable password expiration</p>
           </div>
@@ -120,8 +120,8 @@ export function PasswordPolicyManagement() {
               type="number"
               min="0"
               max="24"
-              value={formData.prevent_reuse_count}
-              onChange={(e) => setFormData({ ...formData, prevent_reuse_count: parseInt(e.target.value) })}
+              value={formData.password_history_count}
+              onChange={(e) => setFormData({ ...formData, password_history_count: parseInt(e.target.value) })}
             />
           </div>
 
@@ -132,8 +132,8 @@ export function PasswordPolicyManagement() {
               type="number"
               min="3"
               max="10"
-              value={formData.lockout_threshold}
-              onChange={(e) => setFormData({ ...formData, lockout_threshold: parseInt(e.target.value) })}
+              value={formData.max_login_attempts}
+              onChange={(e) => setFormData({ ...formData, max_login_attempts: parseInt(e.target.value) })}
             />
           </div>
 

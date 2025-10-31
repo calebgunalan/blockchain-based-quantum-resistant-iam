@@ -1279,6 +1279,30 @@ export type Database = {
         }
         Relationships: []
       }
+      mfa_backup_codes: {
+        Row: {
+          code_hash: string
+          created_at: string | null
+          id: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string | null
+          id?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string | null
+          id?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       mfa_challenge_tokens: {
         Row: {
           attempts: number
@@ -2905,6 +2929,8 @@ export type Database = {
           assigned_at: string
           assigned_by: string | null
           id: string
+          mfa_grace_period_days: number | null
+          mfa_required: boolean | null
           role: Database["public"]["Enums"]["system_role"]
           user_id: string
         }
@@ -2912,6 +2938,8 @@ export type Database = {
           assigned_at?: string
           assigned_by?: string | null
           id?: string
+          mfa_grace_period_days?: number | null
+          mfa_required?: boolean | null
           role?: Database["public"]["Enums"]["system_role"]
           user_id: string
         }
@@ -2919,6 +2947,8 @@ export type Database = {
           assigned_at?: string
           assigned_by?: string | null
           id?: string
+          mfa_grace_period_days?: number | null
+          mfa_required?: boolean | null
           role?: Database["public"]["Enums"]["system_role"]
           user_id?: string
         }
@@ -2995,6 +3025,39 @@ export type Database = {
           location_country?: string | null
           session_token?: string
           user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webauthn_credentials: {
+        Row: {
+          counter: number | null
+          created_at: string | null
+          credential_id: string
+          device_name: string | null
+          id: string
+          last_used_at: string | null
+          public_key: string
+          user_id: string
+        }
+        Insert: {
+          counter?: number | null
+          created_at?: string | null
+          credential_id: string
+          device_name?: string | null
+          id?: string
+          last_used_at?: string | null
+          public_key: string
+          user_id: string
+        }
+        Update: {
+          counter?: number | null
+          created_at?: string | null
+          credential_id?: string
+          device_name?: string | null
+          id?: string
+          last_used_at?: string | null
+          public_key?: string
           user_id?: string
         }
         Relationships: []
@@ -3078,6 +3141,7 @@ export type Database = {
         Returns: Json
       }
       calculate_network_trust: { Args: { user_ip: unknown }; Returns: number }
+      check_mfa_compliance: { Args: { user_id_param: string }; Returns: Json }
       check_user_group_permissions: {
         Args: { _action: string; _resource: string; _user_id: string }
         Returns: boolean
@@ -3180,6 +3244,10 @@ export type Database = {
       process_sso_login: {
         Args: { _provider: string; _user_id: string; _user_metadata: Json }
         Returns: undefined
+      }
+      validate_ip_access: {
+        Args: { ip_address_param: unknown; user_id_param: string }
+        Returns: Json
       }
     }
     Enums: {
