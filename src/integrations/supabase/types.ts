@@ -368,11 +368,13 @@ export type Database = {
           action: string
           block_hash: string | null
           created_at: string
+          gas_used: number | null
           id: string
           integrity_hash: string
           metadata: Json
           quantum_signature: string | null
           resource: string
+          transaction_fee: number | null
           transaction_id: string
           user_id: string
         }
@@ -380,11 +382,13 @@ export type Database = {
           action: string
           block_hash?: string | null
           created_at?: string
+          gas_used?: number | null
           id?: string
           integrity_hash: string
           metadata?: Json
           quantum_signature?: string | null
           resource: string
+          transaction_fee?: number | null
           transaction_id: string
           user_id: string
         }
@@ -392,11 +396,13 @@ export type Database = {
           action?: string
           block_hash?: string | null
           created_at?: string
+          gas_used?: number | null
           id?: string
           integrity_hash?: string
           metadata?: Json
           quantum_signature?: string | null
           resource?: string
+          transaction_fee?: number | null
           transaction_id?: string
           user_id?: string
         }
@@ -406,6 +412,8 @@ export type Database = {
         Row: {
           block_hash: string
           block_index: number
+          block_reward: number | null
+          chain_work: number | null
           created_at: string
           difficulty: number
           id: string
@@ -413,11 +421,14 @@ export type Database = {
           miner_id: string | null
           nonce: number
           previous_hash: string
+          total_fees: number | null
           transaction_count: number
         }
         Insert: {
           block_hash: string
           block_index: number
+          block_reward?: number | null
+          chain_work?: number | null
           created_at?: string
           difficulty: number
           id?: string
@@ -425,11 +436,14 @@ export type Database = {
           miner_id?: string | null
           nonce: number
           previous_hash: string
+          total_fees?: number | null
           transaction_count?: number
         }
         Update: {
           block_hash?: string
           block_index?: number
+          block_reward?: number | null
+          chain_work?: number | null
           created_at?: string
           difficulty?: number
           id?: string
@@ -437,7 +451,86 @@ export type Database = {
           miner_id?: string | null
           nonce?: number
           previous_hash?: string
+          total_fees?: number | null
           transaction_count?: number
+        }
+        Relationships: []
+      }
+      blockchain_forks: {
+        Row: {
+          detected_at: string | null
+          fork_chain_hash: string
+          fork_chain_work: number
+          fork_height: number
+          id: string
+          main_chain_hash: string
+          main_chain_work: number
+          metadata: Json | null
+          resolution: string | null
+          resolved_at: string | null
+        }
+        Insert: {
+          detected_at?: string | null
+          fork_chain_hash: string
+          fork_chain_work: number
+          fork_height: number
+          id?: string
+          main_chain_hash: string
+          main_chain_work: number
+          metadata?: Json | null
+          resolution?: string | null
+          resolved_at?: string | null
+        }
+        Update: {
+          detected_at?: string | null
+          fork_chain_hash?: string
+          fork_chain_work?: number
+          fork_height?: number
+          id?: string
+          main_chain_hash?: string
+          main_chain_work?: number
+          metadata?: Json | null
+          resolution?: string | null
+          resolved_at?: string | null
+        }
+        Relationships: []
+      }
+      blockchain_mempool: {
+        Row: {
+          id: string
+          included_in_block: string | null
+          priority_score: number | null
+          received_at: string | null
+          sender_id: string | null
+          size_bytes: number
+          status: string | null
+          transaction_data: Json
+          transaction_fee: number | null
+          transaction_id: string
+        }
+        Insert: {
+          id?: string
+          included_in_block?: string | null
+          priority_score?: number | null
+          received_at?: string | null
+          sender_id?: string | null
+          size_bytes: number
+          status?: string | null
+          transaction_data: Json
+          transaction_fee?: number | null
+          transaction_id: string
+        }
+        Update: {
+          id?: string
+          included_in_block?: string | null
+          priority_score?: number | null
+          received_at?: string | null
+          sender_id?: string | null
+          size_bytes?: number
+          status?: string | null
+          transaction_data?: Json
+          transaction_fee?: number | null
+          transaction_id?: string
         }
         Relationships: []
       }
@@ -1432,6 +1525,51 @@ export type Database = {
           token_url?: string | null
           updated_at?: string
           user_info_url?: string | null
+        }
+        Relationships: []
+      }
+      p2p_peers: {
+        Row: {
+          ban_reason: string | null
+          created_at: string | null
+          id: string
+          is_banned: boolean | null
+          is_trusted: boolean | null
+          last_seen_at: string | null
+          metadata: Json | null
+          peer_address: string
+          peer_id: string
+          reputation_score: number | null
+          total_blocks_received: number | null
+          total_blocks_sent: number | null
+        }
+        Insert: {
+          ban_reason?: string | null
+          created_at?: string | null
+          id?: string
+          is_banned?: boolean | null
+          is_trusted?: boolean | null
+          last_seen_at?: string | null
+          metadata?: Json | null
+          peer_address: string
+          peer_id: string
+          reputation_score?: number | null
+          total_blocks_received?: number | null
+          total_blocks_sent?: number | null
+        }
+        Update: {
+          ban_reason?: string | null
+          created_at?: string | null
+          id?: string
+          is_banned?: boolean | null
+          is_trusted?: boolean | null
+          last_seen_at?: string | null
+          metadata?: Json | null
+          peer_address?: string
+          peer_id?: string
+          reputation_score?: number | null
+          total_blocks_received?: number | null
+          total_blocks_sent?: number | null
         }
         Relationships: []
       }
@@ -3029,6 +3167,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_token_balances: {
+        Row: {
+          balance: number | null
+          locked_balance: number | null
+          total_earned: number | null
+          total_spent: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance?: number | null
+          locked_balance?: number | null
+          total_earned?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance?: number | null
+          locked_balance?: number | null
+          total_earned?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       webauthn_credentials: {
         Row: {
           counter: number | null
@@ -3141,6 +3306,10 @@ export type Database = {
         Returns: Json
       }
       calculate_network_trust: { Args: { user_ip: unknown }; Returns: number }
+      calculate_transaction_priority: {
+        Args: { age_seconds: number; fee: number; size_bytes: number }
+        Returns: number
+      }
       check_mfa_compliance: { Args: { user_id_param: string }; Returns: Json }
       check_user_group_permissions: {
         Args: { _action: string; _resource: string; _user_id: string }
@@ -3171,6 +3340,7 @@ export type Database = {
       }
       get_effective_user_role: { Args: { _user_id: string }; Returns: string }
       get_location_from_ip: { Args: { ip_address: unknown }; Returns: Json }
+      get_mempool_stats: { Args: never; Returns: Json }
       get_user_id_from_folder: { Args: { file_path: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
@@ -3243,6 +3413,10 @@ export type Database = {
       }
       process_sso_login: {
         Args: { _provider: string; _user_id: string; _user_metadata: Json }
+        Returns: undefined
+      }
+      update_peer_reputation: {
+        Args: { peer_id_param: string; reputation_delta: number }
         Returns: undefined
       }
       validate_ip_access: {
