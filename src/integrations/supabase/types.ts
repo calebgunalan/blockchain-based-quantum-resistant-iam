@@ -1701,6 +1701,51 @@ export type Database = {
           },
         ]
       }
+      pqc_migration_status: {
+        Row: {
+          completed_at: string | null
+          current_algorithm: string
+          dual_mode_enabled: boolean | null
+          error_message: string | null
+          id: string
+          legacy_keys_count: number | null
+          migration_metadata: Json | null
+          migration_stage: string
+          pqc_keys_count: number | null
+          started_at: string | null
+          target_algorithm: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          current_algorithm: string
+          dual_mode_enabled?: boolean | null
+          error_message?: string | null
+          id?: string
+          legacy_keys_count?: number | null
+          migration_metadata?: Json | null
+          migration_stage: string
+          pqc_keys_count?: number | null
+          started_at?: string | null
+          target_algorithm: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          current_algorithm?: string
+          dual_mode_enabled?: boolean | null
+          error_message?: string | null
+          id?: string
+          legacy_keys_count?: number | null
+          migration_metadata?: Json | null
+          migration_stage?: string
+          pqc_keys_count?: number | null
+          started_at?: string | null
+          target_algorithm?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       privileged_accounts: {
         Row: {
           access_policy: Json
@@ -1883,6 +1928,45 @@ export type Database = {
         }
         Relationships: []
       }
+      quantum_batch_verifications: {
+        Row: {
+          algorithm: string
+          batch_id: string
+          batch_metadata: Json | null
+          failure_count: number
+          id: string
+          signature_count: number
+          success_count: number
+          verification_time_ms: number
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          algorithm: string
+          batch_id: string
+          batch_metadata?: Json | null
+          failure_count: number
+          id?: string
+          signature_count: number
+          success_count: number
+          verification_time_ms: number
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          algorithm?: string
+          batch_id?: string
+          batch_metadata?: Json | null
+          failure_count?: number
+          id?: string
+          signature_count?: number
+          success_count?: number
+          verification_time_ms?: number
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: []
+      }
       quantum_certificates: {
         Row: {
           certificate_data: string
@@ -2026,6 +2110,48 @@ export type Database = {
           },
         ]
       }
+      quantum_key_cache: {
+        Row: {
+          algorithm: string
+          cache_hit_count: number | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          is_active: boolean | null
+          key_type: string
+          last_used_at: string | null
+          private_key_encrypted: string
+          public_key: string
+          user_id: string
+        }
+        Insert: {
+          algorithm: string
+          cache_hit_count?: number | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          is_active?: boolean | null
+          key_type: string
+          last_used_at?: string | null
+          private_key_encrypted: string
+          public_key: string
+          user_id: string
+        }
+        Update: {
+          algorithm?: string
+          cache_hit_count?: number | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          is_active?: boolean | null
+          key_type?: string
+          last_used_at?: string | null
+          private_key_encrypted?: string
+          public_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       quantum_key_policies: {
         Row: {
           auto_rotation_enabled: boolean
@@ -2065,6 +2191,48 @@ export type Database = {
           policy_name?: string
           rotation_interval_days?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      quantum_key_rotations: {
+        Row: {
+          completed_at: string | null
+          id: string
+          initiated_by: string | null
+          metadata: Json | null
+          new_algorithm: string
+          new_key_id: string
+          old_algorithm: string
+          old_key_id: string
+          rotation_reason: string
+          rotation_type: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          id?: string
+          initiated_by?: string | null
+          metadata?: Json | null
+          new_algorithm: string
+          new_key_id: string
+          old_algorithm: string
+          old_key_id: string
+          rotation_reason: string
+          rotation_type: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          id?: string
+          initiated_by?: string | null
+          metadata?: Json | null
+          new_algorithm?: string
+          new_key_id?: string
+          old_algorithm?: string
+          old_key_id?: string
+          rotation_reason?: string
+          rotation_type?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -2118,6 +2286,48 @@ export type Database = {
             referencedColumns: ["user_id"]
           },
         ]
+      }
+      quantum_performance_metrics: {
+        Row: {
+          algorithm: string
+          batch_size: number | null
+          cache_hit: boolean | null
+          data_size_bytes: number | null
+          id: string
+          key_size_bytes: number | null
+          metadata: Json | null
+          metric_type: string
+          operation_time_ms: number
+          recorded_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          algorithm: string
+          batch_size?: number | null
+          cache_hit?: boolean | null
+          data_size_bytes?: number | null
+          id?: string
+          key_size_bytes?: number | null
+          metadata?: Json | null
+          metric_type: string
+          operation_time_ms: number
+          recorded_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          algorithm?: string
+          batch_size?: number | null
+          cache_hit?: boolean | null
+          data_size_bytes?: number | null
+          id?: string
+          key_size_bytes?: number | null
+          metadata?: Json | null
+          metric_type?: string
+          operation_time_ms?: number
+          recorded_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       quantum_permissions: {
         Row: {
@@ -3315,6 +3525,7 @@ export type Database = {
         Args: { _action: string; _resource: string; _user_id: string }
         Returns: boolean
       }
+      cleanup_expired_quantum_cache: { Args: never; Returns: number }
       expire_jit_sessions: { Args: never; Returns: number }
       export_audit_logs: {
         Args: { _end_date?: string; _format?: string; _start_date?: string }
@@ -3341,6 +3552,14 @@ export type Database = {
       get_effective_user_role: { Args: { _user_id: string }; Returns: string }
       get_location_from_ip: { Args: { ip_address: unknown }; Returns: Json }
       get_mempool_stats: { Args: never; Returns: Json }
+      get_quantum_cache_stats: {
+        Args: { user_id_param: string }
+        Returns: Json
+      }
+      get_quantum_performance_stats: {
+        Args: { algorithm_param?: string; hours_back?: number }
+        Returns: Json
+      }
       get_user_id_from_folder: { Args: { file_path: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
@@ -3414,6 +3633,18 @@ export type Database = {
       process_sso_login: {
         Args: { _provider: string; _user_id: string; _user_metadata: Json }
         Returns: undefined
+      }
+      record_key_rotation: {
+        Args: {
+          new_algorithm_param: string
+          new_key_id_param: string
+          old_algorithm_param: string
+          old_key_id_param: string
+          rotation_reason_param: string
+          rotation_type_param?: string
+          user_id_param: string
+        }
+        Returns: string
       }
       update_peer_reputation: {
         Args: { peer_id_param: string; reputation_delta: number }
