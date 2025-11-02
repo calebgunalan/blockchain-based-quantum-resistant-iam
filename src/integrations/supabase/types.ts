@@ -1213,6 +1213,51 @@ export type Database = {
         }
         Relationships: []
       }
+      incident_logs: {
+        Row: {
+          affected_systems: string[] | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          incident_type: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          severity: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          affected_systems?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          incident_type: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          affected_systems?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          incident_type?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       ip_access_rules: {
         Row: {
           applies_to: string
@@ -1618,6 +1663,39 @@ export type Database = {
           require_special_chars?: boolean
           require_uppercase?: boolean
           updated_at?: string
+        }
+        Relationships: []
+      }
+      performance_benchmarks: {
+        Row: {
+          benchmark_name: string
+          duration_ms: number
+          id: string
+          metadata: Json | null
+          operation_type: string
+          recorded_at: string | null
+          success_rate: number | null
+          throughput: number | null
+        }
+        Insert: {
+          benchmark_name: string
+          duration_ms: number
+          id?: string
+          metadata?: Json | null
+          operation_type: string
+          recorded_at?: string | null
+          success_rate?: number | null
+          throughput?: number | null
+        }
+        Update: {
+          benchmark_name?: string
+          duration_ms?: number
+          id?: string
+          metadata?: Json | null
+          operation_type?: string
+          recorded_at?: string | null
+          success_rate?: number | null
+          throughput?: number | null
         }
         Relationships: []
       }
@@ -2619,6 +2697,75 @@ export type Database = {
         }
         Relationships: []
       }
+      system_alerts: {
+        Row: {
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string | null
+          id: string
+          message: string
+          metadata: Json | null
+          severity: string | null
+          source: string
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string | null
+          id?: string
+          message: string
+          metadata?: Json | null
+          severity?: string | null
+          source: string
+        }
+        Update: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string | null
+          id?: string
+          message?: string
+          metadata?: Json | null
+          severity?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
+      system_health_metrics: {
+        Row: {
+          id: string
+          metadata: Json | null
+          metric_name: string
+          metric_unit: string | null
+          metric_value: number
+          recorded_at: string | null
+          severity: string | null
+        }
+        Insert: {
+          id?: string
+          metadata?: Json | null
+          metric_name: string
+          metric_unit?: string | null
+          metric_value: number
+          recorded_at?: string | null
+          severity?: string | null
+        }
+        Update: {
+          id?: string
+          metadata?: Json | null
+          metric_name?: string
+          metric_unit?: string | null
+          metric_value?: number
+          recorded_at?: string | null
+          severity?: string | null
+        }
+        Relationships: []
+      }
       system_security_config: {
         Row: {
           config_key: string
@@ -2897,6 +3044,39 @@ export type Database = {
           last_used_at?: string | null
           user_agent?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      uptime_checks: {
+        Row: {
+          checked_at: string | null
+          endpoint: string
+          error_message: string | null
+          id: string
+          is_up: boolean
+          response_time_ms: number | null
+          service_name: string
+          status_code: number | null
+        }
+        Insert: {
+          checked_at?: string | null
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          is_up: boolean
+          response_time_ms?: number | null
+          service_name: string
+          status_code?: number | null
+        }
+        Update: {
+          checked_at?: string | null
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          is_up?: boolean
+          response_time_ms?: number | null
+          service_name?: string
+          status_code?: number | null
         }
         Relationships: []
       }
@@ -3560,6 +3740,7 @@ export type Database = {
         Args: { algorithm_param?: string; hours_back?: number }
         Returns: Json
       }
+      get_system_health_summary: { Args: never; Returns: Json }
       get_user_id_from_folder: { Args: { file_path: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
@@ -3643,6 +3824,16 @@ export type Database = {
           rotation_reason_param: string
           rotation_type_param?: string
           user_id_param: string
+        }
+        Returns: string
+      }
+      record_system_metric: {
+        Args: {
+          metadata_param?: Json
+          metric_name_param: string
+          metric_unit_param?: string
+          metric_value_param: number
+          severity_param?: string
         }
         Returns: string
       }

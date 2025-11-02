@@ -1,267 +1,394 @@
-/**
- * Real-Time Monitoring System using Supabase Realtime
- * Provides WebSocket-based live updates for security events
- */
-
 import { supabase } from '@/integrations/supabase/client';
-import type { RealtimeChannel } from '@supabase/supabase-js';
 
-export type MonitoringEventType = 
-  | 'LOGIN_ATTEMPT'
-  | 'ACCESS_DENIED'
-  | 'ATTACK_DETECTED'
-  | 'SESSION_STARTED'
-  | 'SESSION_ENDED'
-  | 'POLICY_VIOLATION'
-  | 'BLOCKCHAIN_EVENT'
-  | 'QUANTUM_OPERATION';
-
-export interface MonitoringEvent {
-  id: string;
-  type: MonitoringEventType;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  userId?: string;
-  timestamp: string;
-  data: Record<string, any>;
+export interface SystemHealthMetric {
+  metricName: string;
+  metricValue: number;
+  metricUnit?: string;
+  severity: 'info' | 'warning' | 'critical';
+  metadata?: Record<string, any>;
 }
 
-export interface SubscriptionOptions {
-  userId?: string;
-  eventTypes?: MonitoringEventType[];
-  minSeverity?: 'low' | 'medium' | 'high' | 'critical';
+export interface SystemAlert {
+  alertType: string;
+  severity: 'info' | 'warning' | 'error' | 'critical';
+  message: string;
+  source: string;
+  metadata?: Record<string, any>;
+}
+
+export interface IncidentReport {
+  incidentType: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  title: string;
+  description?: string;
+  affectedSystems: string[];
 }
 
 /**
- * Real-Time Monitoring Manager
+ * Real-Time System Monitoring
+ * Tracks system health, performance, and incidents
  */
 export class RealTimeMonitoring {
-  private channels: Map<string, RealtimeChannel> = new Map();
-  private eventHandlers: Map<string, Set<(event: MonitoringEvent) => void>> = new Map();
-
   /**
-   * Subscribe to audit log changes
+   * Record a system health metric
    */
-  subscribeToAuditLogs(
-    callback: (event: MonitoringEvent) => void,
-    options: SubscriptionOptions = {}
-  ): () => void {
-    const channelId = `audit-logs-${Date.now()}`;
-    
-    const channel = supabase
-      .channel(channelId)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'audit_logs',
-          filter: options.userId ? `user_id=eq.${options.userId}` : undefined
-        },
-        (payload) => {
-          const event: MonitoringEvent = {
-            id: payload.new.id,
-            type: this.mapActionToEventType(payload.new.action),
-            severity: this.determineSeverity(payload.new.action),
-            userId: payload.new.user_id,
-            timestamp: payload.new.created_at,
-            data: payload.new
-          };
+  static async recordMetric(metric: SystemHealthMetric): Promise<boolean> {
+    const { error } = await supabase
+      .from('system_health_metrics')
+      .insert({
+        metric_name: metric.metricName,
+        metric_value: metric.metricValue,
+        metric_unit: metric.metricUnit,
+        severity: metric.severity,
+        metadata: metric.metadata || {}
+      });
 
-          if (this.shouldNotify(event, options)) {
-            callback(event);
-          }
-        }
-      )
-      .subscribe();
-
-    this.channels.set(channelId, channel);
-
-    // Return unsubscribe function
-    return () => {
-      channel.unsubscribe();
-      this.channels.delete(channelId);
-    };
-  }
-
-  /**
-   * Subscribe to attack detection events
-   */
-  subscribeToAttacks(
-    callback: (event: MonitoringEvent) => void
-  ): () => void {
-    const channelId = `attacks-${Date.now()}`;
-    
-    const channel = supabase
-      .channel(channelId)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'quantum_attack_logs'
-        },
-        (payload) => {
-          const event: MonitoringEvent = {
-            id: payload.new.id,
-            type: 'ATTACK_DETECTED',
-            severity: payload.new.severity || 'high',
-            userId: payload.new.target_user_id,
-            timestamp: payload.new.detected_at,
-            data: payload.new
-          };
-
-          callback(event);
-        }
-      )
-      .subscribe();
-
-    this.channels.set(channelId, channel);
-
-    return () => {
-      channel.unsubscribe();
-      this.channels.delete(channelId);
-    };
-  }
-
-  /**
-   * Subscribe to session changes
-   */
-  subscribeToSessions(
-    callback: (event: MonitoringEvent) => void,
-    userId?: string
-  ): () => void {
-    const channelId = `sessions-${Date.now()}`;
-    
-    const channel = supabase
-      .channel(channelId)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_sessions',
-          filter: userId ? `user_id=eq.${userId}` : undefined
-        },
-        (payload) => {
-          const isInsert = payload.eventType === 'INSERT';
-          const newData = payload.new as any;
-          const oldData = payload.old as any;
-          
-          const event: MonitoringEvent = {
-            id: newData?.id || oldData?.id || 'unknown',
-            type: isInsert ? 'SESSION_STARTED' : 'SESSION_ENDED',
-            severity: 'low',
-            userId: newData?.user_id || oldData?.user_id,
-            timestamp: new Date().toISOString(),
-            data: payload
-          };
-
-          callback(event);
-        }
-      )
-      .subscribe();
-
-    this.channels.set(channelId, channel);
-
-    return () => {
-      channel.unsubscribe();
-      this.channels.delete(channelId);
-    };
-  }
-
-  /**
-   * Subscribe to blockchain events
-   */
-  subscribeToBlockchain(
-    callback: (event: MonitoringEvent) => void
-  ): () => void {
-    const channelId = `blockchain-${Date.now()}`;
-    
-    const channel = supabase
-      .channel(channelId)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'blockchain_blocks'
-        },
-        (payload) => {
-          const event: MonitoringEvent = {
-            id: payload.new.id,
-            type: 'BLOCKCHAIN_EVENT',
-            severity: 'low',
-            timestamp: payload.new.created_at,
-            data: {
-              block_index: payload.new.block_index,
-              block_hash: payload.new.block_hash,
-              transaction_count: payload.new.transaction_count
-            }
-          };
-
-          callback(event);
-        }
-      )
-      .subscribe();
-
-    this.channels.set(channelId, channel);
-
-    return () => {
-      channel.unsubscribe();
-      this.channels.delete(channelId);
-    };
-  }
-
-  /**
-   * Unsubscribe from all channels
-   */
-  unsubscribeAll(): void {
-    for (const [channelId, channel] of this.channels.entries()) {
-      channel.unsubscribe();
-      this.channels.delete(channelId);
-    }
-  }
-
-  /**
-   * Map action string to event type
-   */
-  private mapActionToEventType(action: string): MonitoringEventType {
-    if (action.includes('LOGIN')) return 'LOGIN_ATTEMPT';
-    if (action.includes('DENIED')) return 'ACCESS_DENIED';
-    if (action.includes('ATTACK')) return 'ATTACK_DETECTED';
-    if (action.includes('QUANTUM')) return 'QUANTUM_OPERATION';
-    if (action.includes('BLOCKCHAIN')) return 'BLOCKCHAIN_EVENT';
-    return 'LOGIN_ATTEMPT';
-  }
-
-  /**
-   * Determine severity from action
-   */
-  private determineSeverity(action: string): 'low' | 'medium' | 'high' | 'critical' {
-    if (action.includes('ATTACK') || action.includes('CRITICAL')) return 'critical';
-    if (action.includes('FAILED') || action.includes('DENIED')) return 'high';
-    if (action.includes('WARNING')) return 'medium';
-    return 'low';
-  }
-
-  /**
-   * Check if event should be notified based on options
-   */
-  private shouldNotify(event: MonitoringEvent, options: SubscriptionOptions): boolean {
-    if (options.eventTypes && !options.eventTypes.includes(event.type)) {
+    if (error) {
+      console.error('Failed to record metric:', error);
       return false;
     }
 
-    if (options.minSeverity) {
-      const severityLevels = { low: 0, medium: 1, high: 2, critical: 3 };
-      if (severityLevels[event.severity] < severityLevels[options.minSeverity]) {
-        return false;
-      }
+    // Auto-create alert for critical metrics
+    if (metric.severity === 'critical') {
+      await this.createAlert({
+        alertType: 'metric_critical',
+        severity: 'critical',
+        message: `Critical metric detected: ${metric.metricName} = ${metric.metricValue}`,
+        source: 'monitoring_system',
+        metadata: metric.metadata
+      });
     }
 
     return true;
   }
-}
 
-// Export singleton instance
-export const realTimeMonitoring = new RealTimeMonitoring();
+  /**
+   * Create a system alert
+   */
+  static async createAlert(alert: SystemAlert): Promise<boolean> {
+    const { error } = await supabase
+      .from('system_alerts')
+      .insert({
+        alert_type: alert.alertType,
+        severity: alert.severity,
+        message: alert.message,
+        source: alert.source,
+        metadata: alert.metadata || {}
+      });
+
+    return !error;
+  }
+
+  /**
+   * Get system health summary
+   */
+  static async getHealthSummary() {
+    const { data, error } = await supabase.rpc('get_system_health_summary');
+
+    if (error) {
+      console.error('Failed to get health summary:', error);
+      return null;
+    }
+
+    return data;
+  }
+
+  /**
+   * Get unacknowledged alerts
+   */
+  static async getUnacknowledgedAlerts() {
+    const { data, error } = await supabase
+      .from('system_alerts')
+      .select('*')
+      .eq('acknowledged', false)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) {
+      console.error('Failed to get alerts:', error);
+      return [];
+    }
+
+    return data;
+  }
+
+  /**
+   * Acknowledge an alert
+   */
+  static async acknowledgeAlert(alertId: string): Promise<boolean> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { error } = await supabase
+      .from('system_alerts')
+      .update({
+        acknowledged: true,
+        acknowledged_by: user?.id,
+        acknowledged_at: new Date().toISOString()
+      })
+      .eq('id', alertId);
+
+    return !error;
+  }
+
+  /**
+   * Create an incident report
+   */
+  static async createIncident(incident: IncidentReport): Promise<string | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    const { data, error } = await supabase
+      .from('incident_logs')
+      .insert({
+        incident_type: incident.incidentType,
+        severity: incident.severity,
+        title: incident.title,
+        description: incident.description,
+        affected_systems: incident.affectedSystems,
+        created_by: user?.id
+      })
+      .select('id')
+      .single();
+
+    if (error) {
+      console.error('Failed to create incident:', error);
+      return null;
+    }
+
+    return data.id;
+  }
+
+  /**
+   * Update incident status
+   */
+  static async updateIncidentStatus(
+    incidentId: string,
+    status: 'open' | 'investigating' | 'resolved' | 'closed',
+    resolutionNotes?: string
+  ): Promise<boolean> {
+    const updateData: any = { status };
+
+    if (status === 'resolved' || status === 'closed') {
+      updateData.resolved_at = new Date().toISOString();
+      if (resolutionNotes) {
+        updateData.resolution_notes = resolutionNotes;
+      }
+    }
+
+    const { error } = await supabase
+      .from('incident_logs')
+      .update(updateData)
+      .eq('id', incidentId);
+
+    return !error;
+  }
+
+  /**
+   * Get recent incidents
+   */
+  static async getRecentIncidents(limit: number = 20) {
+    const { data, error } = await supabase
+      .from('incident_logs')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('Failed to get incidents:', error);
+      return [];
+    }
+
+    return data;
+  }
+
+  /**
+   * Record uptime check
+   */
+  static async recordUptimeCheck(
+    serviceName: string,
+    endpoint: string,
+    isUp: boolean,
+    responseTimeMs?: number,
+    statusCode?: number,
+    errorMessage?: string
+  ): Promise<boolean> {
+    const { error } = await supabase
+      .from('uptime_checks')
+      .insert({
+        service_name: serviceName,
+        endpoint,
+        is_up: isUp,
+        response_time_ms: responseTimeMs,
+        status_code: statusCode,
+        error_message: errorMessage
+      });
+
+    if (error) {
+      console.error('Failed to record uptime check:', error);
+      return false;
+    }
+
+    // Create alert if service is down
+    if (!isUp) {
+      await this.createAlert({
+        alertType: 'service_down',
+        severity: 'critical',
+        message: `Service ${serviceName} is down: ${errorMessage || 'Unknown error'}`,
+        source: 'uptime_monitor',
+        metadata: { endpoint, statusCode }
+      });
+    }
+
+    return true;
+  }
+
+  /**
+   * Get uptime statistics
+   */
+  static async getUptimeStats(serviceName: string, hoursBack: number = 24) {
+    const cutoff = new Date();
+    cutoff.setHours(cutoff.getHours() - hoursBack);
+
+    const { data, error } = await supabase
+      .from('uptime_checks')
+      .select('*')
+      .eq('service_name', serviceName)
+      .gte('checked_at', cutoff.toISOString())
+      .order('checked_at', { ascending: false });
+
+    if (error || !data) {
+      return {
+        totalChecks: 0,
+        upCount: 0,
+        downCount: 0,
+        uptimePercentage: 0,
+        avgResponseTime: 0
+      };
+    }
+
+    const upCount = data.filter(d => d.is_up).length;
+    const responseTimes = data
+      .filter(d => d.response_time_ms !== null)
+      .map(d => d.response_time_ms!);
+
+    return {
+      totalChecks: data.length,
+      upCount,
+      downCount: data.length - upCount,
+      uptimePercentage: (upCount / data.length) * 100,
+      avgResponseTime: responseTimes.length > 0
+        ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
+        : 0
+    };
+  }
+
+  /**
+   * Monitor blockchain health
+   */
+  static async monitorBlockchainHealth() {
+    const { data: latestBlocks } = await supabase
+      .from('blockchain_blocks')
+      .select('*')
+      .order('block_number', { ascending: false })
+      .limit(10);
+
+    if (!latestBlocks || latestBlocks.length === 0) {
+      await this.createAlert({
+        alertType: 'blockchain_stalled',
+        severity: 'critical',
+        message: 'No blocks found in blockchain',
+        source: 'blockchain_monitor'
+      });
+      return;
+    }
+
+    // Check if blockchain is stalled
+    const latestBlock = latestBlocks[0];
+    const blockAge = Date.now() - new Date(latestBlock.created_at).getTime();
+    const maxBlockAge = 60000; // 1 minute
+
+    if (blockAge > maxBlockAge) {
+      await this.createAlert({
+        alertType: 'blockchain_stalled',
+        severity: 'warning',
+        message: `Blockchain appears stalled. Latest block is ${Math.round(blockAge / 1000)}s old`,
+        source: 'blockchain_monitor',
+        metadata: { blockIndex: latestBlock.block_index, blockAge }
+      });
+    }
+
+    // Record blockchain height metric
+    await this.recordMetric({
+      metricName: 'blockchain_height',
+      metricValue: latestBlock.block_index,
+      metricUnit: 'blocks',
+      severity: 'info'
+    });
+  }
+
+  /**
+   * Monitor P2P network health
+   */
+  static async monitorP2PHealth() {
+    const { data: peers } = await supabase
+      .from('p2p_peers')
+      .select('*')
+      .eq('status', 'active');
+
+    const peerCount = peers?.length || 0;
+
+    await this.recordMetric({
+      metricName: 'p2p_active_peers',
+      metricValue: peerCount,
+      metricUnit: 'peers',
+      severity: peerCount < 3 ? 'warning' : 'info'
+    });
+
+    if (peerCount === 0) {
+      await this.createAlert({
+        alertType: 'p2p_no_peers',
+        severity: 'critical',
+        message: 'No active P2P peers connected',
+        source: 'p2p_monitor'
+      });
+    }
+  }
+
+  /**
+   * Monitor mempool health
+   */
+  static async monitorMempoolHealth() {
+    const { data: mempool } = await supabase
+      .from('blockchain_mempool')
+      .select('*')
+      .eq('status', 'pending');
+
+    const pendingCount = mempool?.length || 0;
+
+    await this.recordMetric({
+      metricName: 'mempool_size',
+      metricValue: pendingCount,
+      metricUnit: 'transactions',
+      severity: pendingCount > 1000 ? 'warning' : 'info'
+    });
+
+    if (pendingCount > 10000) {
+      await this.createAlert({
+        alertType: 'mempool_congestion',
+        severity: 'warning',
+        message: `Mempool congested with ${pendingCount} pending transactions`,
+        source: 'mempool_monitor'
+      });
+    }
+  }
+
+  /**
+   * Run all health checks
+   */
+  static async runAllHealthChecks() {
+    await Promise.all([
+      this.monitorBlockchainHealth(),
+      this.monitorP2PHealth(),
+      this.monitorMempoolHealth()
+    ]);
+  }
+}

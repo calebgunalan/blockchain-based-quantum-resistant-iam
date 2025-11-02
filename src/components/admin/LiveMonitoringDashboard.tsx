@@ -1,246 +1,313 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { Activity, Shield, Users, AlertTriangle, TrendingUp, Clock } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RealTimeMonitoring } from '@/lib/real-time-monitoring';
+import { useToast } from '@/hooks/use-toast';
+import { 
+  Activity, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Server,
+  Zap,
+  TrendingUp
+} from 'lucide-react';
 
 export function LiveMonitoringDashboard() {
-  const { user } = useAuth();
-  const [metrics, setMetrics] = useState({
-    activeSessions: 0,
-    failedLogins24h: 0,
-    pendingJITRequests: 0,
-    recentAttacks: 0,
-    blockchainHealth: 100,
-    avgTrustScore: 0,
-    activeQuantumOps: 0,
-  });
+  const [healthSummary, setHealthSummary] = useState<any>(null);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [incidents, setIncidents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const [loginAttempts, setLoginAttempts] = useState<Array<{ time: string; count: number }>>([]);
-  const [trustDistribution, setTrustDistribution] = useState<Array<{ range: string; count: number }>>([]);
-  const [recentActivity, setRecentActivity] = useState<Array<{ id: string; action: string; user: string; time: string; severity: string }>>([]);
-
-  useEffect(() => {
-    if (user) {
-      fetchMetrics();
-      const interval = setInterval(fetchMetrics, 5000); // Update every 5 seconds
-      return () => clearInterval(interval);
-    }
-  }, [user]);
-
-  const fetchMetrics = async () => {
+  const loadData = async () => {
+    setLoading(true);
     try {
-      // Active sessions
-      const { count: sessionsCount } = await supabase
-        .from('user_sessions')
-        .select('*', { count: 'exact', head: true })
-        .is('expires_at', null);
+      const [summary, alertsData, incidentsData] = await Promise.all([
+        RealTimeMonitoring.getHealthSummary(),
+        RealTimeMonitoring.getUnacknowledgedAlerts(),
+        RealTimeMonitoring.getRecentIncidents(10)
+      ]);
 
-      // Failed logins in last 24 hours
-      const { data: failedLogins } = await supabase
-        .from('audit_logs')
-        .select('created_at')
-        .eq('action', 'LOGIN_FAILED')
-        .gte('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString());
-
-      // Pending JIT requests
-      const { count: jitCount } = await supabase
-        .from('jit_access_sessions')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
-
-      // Recent attacks
-      const { count: attacksCount } = await supabase
-        .from('quantum_attack_logs')
-        .select('*', { count: 'exact', head: true })
-        .gte('detected_at', new Date(Date.now() - 60 * 60 * 1000).toISOString());
-
-      // Average trust score (simulated for now)
-      const avgTrust = 75;
-
-      // Build login attempts timeline
-      const loginTimeline: Array<{ time: string; count: number }> = [];
-      for (let i = 23; i >= 0; i--) {
-        const hour = new Date(Date.now() - i * 60 * 60 * 1000).getHours();
-        const hourStart = new Date(Date.now() - i * 60 * 60 * 1000).setMinutes(0, 0, 0);
-        
-        const count = failedLogins?.filter(log => {
-          const logTime = new Date(log.created_at).getTime();
-          return logTime >= hourStart && logTime < hourStart + 3600000;
-        }).length || 0;
-
-        loginTimeline.push({
-          time: `${hour}:00`,
-          count
-        });
-      }
-
-      // Trust score distribution (simulated)
-      const distribution = [
-        { range: '0-20', count: 2 },
-        { range: '21-40', count: 5 },
-        { range: '41-60', count: 12 },
-        { range: '61-80', count: 28 },
-        { range: '81-100', count: 45 },
-      ];
-
-      // Recent activity
-      const { data: recentLogs } = await supabase
-        .from('audit_logs')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      const activities = recentLogs?.map(log => ({
-        id: log.id,
-        action: log.action,
-        user: log.user_id?.substring(0, 8) || 'System',
-        time: new Date(log.created_at).toLocaleTimeString(),
-        severity: log.action.includes('ATTACK') || log.action.includes('FAILED') ? 'high' : 'normal'
-      })) || [];
-
-      setMetrics({
-        activeSessions: sessionsCount || 0,
-        failedLogins24h: failedLogins?.length || 0,
-        pendingJITRequests: jitCount || 0,
-        recentAttacks: attacksCount || 0,
-        blockchainHealth: 100,
-        avgTrustScore: Math.round(avgTrust),
-        activeQuantumOps: Math.floor(Math.random() * 10), // Simulated
-      });
-
-      setLoginAttempts(loginTimeline);
-      setTrustDistribution(distribution);
-      setRecentActivity(activities);
+      setHealthSummary(summary);
+      setAlerts(alertsData);
+      setIncidents(incidentsData);
     } catch (error) {
-      console.error('Error fetching metrics:', error);
+      console.error('Failed to load monitoring data:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error loading monitoring data',
+        description: 'Please try again later'
+      });
+    } finally {
+      setLoading(false);
     }
   };
+
+  useEffect(() => {
+    loadData();
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(loadData, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const acknowledgeAlert = async (alertId: string) => {
+    const success = await RealTimeMonitoring.acknowledgeAlert(alertId);
+    if (success) {
+      toast({
+        title: 'Alert acknowledged',
+        description: 'The alert has been marked as acknowledged'
+      });
+      loadData();
+    }
+  };
+
+  const runHealthChecks = async () => {
+    toast({
+      title: 'Running health checks',
+      description: 'System health checks are being performed...'
+    });
+    
+    await RealTimeMonitoring.runAllHealthChecks();
+    
+    setTimeout(() => {
+      loadData();
+      toast({
+        title: 'Health checks complete',
+        description: 'System health has been updated'
+      });
+    }, 2000);
+  };
+
+  const getSeverityColor = (severity: string) => {
+    switch (severity) {
+      case 'critical':
+        return 'destructive';
+      case 'warning':
+      case 'high':
+        return 'default';
+      case 'info':
+      case 'low':
+        return 'secondary';
+      default:
+        return 'outline';
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Activity className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading monitoring data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Live Security Monitoring</h1>
-          <p className="text-muted-foreground">Real-time security events and metrics</p>
+          <h2 className="text-3xl font-bold">Live System Monitoring</h2>
+          <p className="text-muted-foreground">
+            Real-time system health and performance metrics
+          </p>
         </div>
-        <Badge variant="outline" className="gap-1">
-          <Activity className="h-3 w-3" />
-          Live Updates
-        </Badge>
+        <Button onClick={runHealthChecks}>
+          <Activity className="mr-2 h-4 w-4" />
+          Run Health Checks
+        </Button>
       </div>
 
-      {/* Key Metrics */}
+      {/* Critical Alerts */}
+      {alerts.filter(a => a.severity === 'critical').length > 0 && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertDescription>
+            {alerts.filter(a => a.severity === 'critical').length} critical alert(s) require immediate attention
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* System Health Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Active Sessions</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Blockchain Status</CardTitle>
+            <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.activeSessions}</div>
-            <p className="text-xs text-muted-foreground">Currently online</p>
+            <div className="text-2xl font-bold">
+              {healthSummary?.blockchain?.latest_block || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Latest block • {healthSummary?.blockchain?.avg_block_time || 0}s avg
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Failed Logins (24h)</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-destructive" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">P2P Network</CardTitle>
+            <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.failedLogins24h}</div>
-            <p className="text-xs text-muted-foreground">Last 24 hours</p>
+            <div className="text-2xl font-bold">
+              {healthSummary?.p2p_network?.active_peers || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Active peers • {healthSummary?.p2p_network?.avg_reputation || 0} avg rep
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Pending JIT Requests</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.pendingJITRequests}</div>
-            <p className="text-xs text-muted-foreground">Awaiting approval</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Avg Trust Score</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Mempool</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics.avgTrustScore}</div>
-            <p className="text-xs text-muted-foreground">Out of 100</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Charts */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Failed Login Attempts (24h)</CardTitle>
-            <CardDescription>Hourly breakdown of failed authentication</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={loginAttempts}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="time" />
-                <YAxis />
-                <Tooltip />
-                <Area type="monotone" dataKey="count" stroke="hsl(var(--destructive))" fill="hsl(var(--destructive))" fillOpacity={0.3} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div className="text-2xl font-bold">
+              {healthSummary?.mempool?.pending_transactions || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Pending transactions
+            </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Trust Score Distribution</CardTitle>
-            <CardDescription>User trust score ranges</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Alerts</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={trustDistribution}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="range" />
-                <YAxis />
-                <Tooltip />
-                <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div className="text-2xl font-bold">
+              {healthSummary?.alerts?.unacknowledged || 0}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {healthSummary?.alerts?.critical || 0} critical
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Activity Feed */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Security Events</CardTitle>
-          <CardDescription>Live feed of security-related activities</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {recentActivity.map((activity) => (
-              <div key={activity.id} className="flex items-center justify-between border-b pb-3 last:border-0">
-                <div className="flex items-center gap-3">
-                  <Shield className={`h-4 w-4 ${activity.severity === 'high' ? 'text-destructive' : 'text-muted-foreground'}`} />
-                  <div>
-                    <p className="text-sm font-medium">{activity.action}</p>
-                    <p className="text-xs text-muted-foreground">User: {activity.user}</p>
-                  </div>
+      <Tabs defaultValue="alerts" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="alerts">
+            Alerts ({alerts.length})
+          </TabsTrigger>
+          <TabsTrigger value="incidents">
+            Incidents ({incidents.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="alerts" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>System Alerts</CardTitle>
+              <CardDescription>
+                Unacknowledged alerts requiring attention
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {alerts.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                  <p>No unacknowledged alerts</p>
                 </div>
-                <span className="text-xs text-muted-foreground">{activity.time}</span>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              ) : (
+                <div className="space-y-4">
+                  {alerts.map((alert) => (
+                    <div
+                      key={alert.id}
+                      className="flex items-start justify-between p-4 border rounded-lg"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Badge variant={getSeverityColor(alert.severity)}>
+                            {alert.severity}
+                          </Badge>
+                          <Badge variant="outline">{alert.alert_type}</Badge>
+                        </div>
+                        <p className="font-medium mb-1">{alert.message}</p>
+                        <p className="text-sm text-muted-foreground">
+                          Source: {alert.source} • {new Date(alert.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => acknowledgeAlert(alert.id)}
+                      >
+                        Acknowledge
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="incidents" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Incident Log</CardTitle>
+              <CardDescription>
+                Recent system incidents and their status
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {incidents.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <CheckCircle2 className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                  <p>No recent incidents</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {incidents.map((incident) => (
+                    <div
+                      key={incident.id}
+                      className="p-4 border rounded-lg"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={getSeverityColor(incident.severity)}>
+                            {incident.severity}
+                          </Badge>
+                          <Badge variant="outline">{incident.status}</Badge>
+                        </div>
+                        <span className="text-sm text-muted-foreground">
+                          {new Date(incident.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                      <h4 className="font-semibold mb-1">{incident.title}</h4>
+                      {incident.description && (
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {incident.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-muted-foreground">Affected:</span>
+                        {incident.affected_systems?.map((system: string) => (
+                          <Badge key={system} variant="secondary">
+                            {system}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
