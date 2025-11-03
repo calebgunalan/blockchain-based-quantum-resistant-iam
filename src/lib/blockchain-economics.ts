@@ -115,4 +115,42 @@ export class BlockchainEconomics {
       activeAccounts: balances?.filter(b => parseFloat(b.balance.toString()) > 0).length || 0
     };
   }
+
+  async transferTokens(fromUserId: string, toUserId: string, amount: number): Promise<boolean> {
+    // Check sender balance
+    const fromBalance = await this.getUserBalance(fromUserId);
+    if (fromBalance < amount) {
+      return false;
+    }
+
+    // Deduct from sender
+    const deducted = await this.updateBalance(fromUserId, amount, 'spend');
+    if (!deducted) {
+      return false;
+    }
+
+    // Add to recipient
+    const added = await this.updateBalance(toUserId, amount, 'earn');
+    if (!added) {
+      // Rollback sender deduction
+      await this.updateBalance(fromUserId, amount, 'earn');
+      return false;
+    }
+
+    // Log transfer
+    await supabase.from('audit_logs').insert({
+      user_id: fromUserId,
+      action: 'token_transfer',
+      resource: 'blockchain',
+      details: {
+        to_user_id: toUserId,
+        amount
+      }
+    });
+
+    return true;
+  }
 }
+
+// Export singleton instance
+export const blockchainEconomics = new BlockchainEconomics();
