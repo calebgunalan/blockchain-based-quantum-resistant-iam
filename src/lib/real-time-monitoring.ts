@@ -1,5 +1,8 @@
 import { supabase } from '@/integrations/supabase/client';
 
+// Type-safe wrapper to avoid deep instantiation errors
+const db = supabase as any;
+
 export interface SystemHealthMetric {
   metricName: string;
   metricValue: number;
@@ -33,7 +36,7 @@ export class RealTimeMonitoring {
    * Record a system health metric
    */
   static async recordMetric(metric: SystemHealthMetric): Promise<boolean> {
-    const { error } = await supabase
+    const { error } = await db
       .from('system_health_metrics')
       .insert({
         metric_name: metric.metricName,
@@ -66,7 +69,7 @@ export class RealTimeMonitoring {
    * Create a system alert
    */
   static async createAlert(alert: SystemAlert): Promise<boolean> {
-    const { error } = await supabase
+    const { error } = await db
       .from('system_alerts')
       .insert({
         alert_type: alert.alertType,
@@ -83,7 +86,7 @@ export class RealTimeMonitoring {
    * Get system health summary
    */
   static async getHealthSummary() {
-    const { data, error } = await supabase.rpc('get_system_health_summary');
+    const { data, error } = await db.rpc('get_system_health_summary');
 
     if (error) {
       console.error('Failed to get health summary:', error);
@@ -97,7 +100,7 @@ export class RealTimeMonitoring {
    * Get unacknowledged alerts
    */
   static async getUnacknowledgedAlerts() {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('system_alerts')
       .select('*')
       .eq('acknowledged', false)
@@ -116,9 +119,9 @@ export class RealTimeMonitoring {
    * Acknowledge an alert
    */
   static async acknowledgeAlert(alertId: string): Promise<boolean> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await db.auth.getUser();
     
-    const { error } = await supabase
+    const { error } = await db
       .from('system_alerts')
       .update({
         acknowledged: true,
@@ -134,9 +137,9 @@ export class RealTimeMonitoring {
    * Create an incident report
    */
   static async createIncident(incident: IncidentReport): Promise<string | null> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user } } = await db.auth.getUser();
     
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('incident_logs')
       .insert({
         incident_type: incident.incidentType,
@@ -174,7 +177,7 @@ export class RealTimeMonitoring {
       }
     }
 
-    const { error } = await supabase
+    const { error } = await db
       .from('incident_logs')
       .update(updateData)
       .eq('id', incidentId);
@@ -186,7 +189,7 @@ export class RealTimeMonitoring {
    * Get recent incidents
    */
   static async getRecentIncidents(limit: number = 20) {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('incident_logs')
       .select('*')
       .order('created_at', { ascending: false })
@@ -211,7 +214,7 @@ export class RealTimeMonitoring {
     statusCode?: number,
     errorMessage?: string
   ): Promise<boolean> {
-    const { error } = await supabase
+    const { error } = await db
       .from('uptime_checks')
       .insert({
         service_name: serviceName,
@@ -248,7 +251,7 @@ export class RealTimeMonitoring {
     const cutoff = new Date();
     cutoff.setHours(cutoff.getHours() - hoursBack);
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('uptime_checks')
       .select('*')
       .eq('service_name', serviceName)
@@ -284,13 +287,13 @@ export class RealTimeMonitoring {
   /**
    * Monitor blockchain health
    */
-  static async monitorBlockchainHealth() {
-    const { data: latestBlocks } = await supabase
+  static async monitorBlockchainHealth(): Promise<void> {
+    const { data: latestBlocks } = await db
       .from('blockchain_blocks')
       .select('*')
       .order('block_number', { ascending: false })
       .limit(10);
-
+    
     if (!latestBlocks || latestBlocks.length === 0) {
       await this.createAlert({
         alertType: 'blockchain_stalled',
@@ -328,19 +331,19 @@ export class RealTimeMonitoring {
   /**
    * Monitor P2P network health
    */
-  static async monitorP2PHealth() {
-    const { data: peers } = await supabase
+  static async monitorP2PHealth(): Promise<void> {
+    const { data: peers } = await db
       .from('p2p_peers')
       .select('*')
       .eq('status', 'active');
-
     const peerCount = peers?.length || 0;
+    const severity: 'info' | 'warning' | 'critical' = peerCount < 3 ? 'warning' : 'info';
 
     await this.recordMetric({
       metricName: 'p2p_active_peers',
       metricValue: peerCount,
       metricUnit: 'peers',
-      severity: peerCount < 3 ? 'warning' : 'info'
+      severity
     });
 
     if (peerCount === 0) {
@@ -356,19 +359,19 @@ export class RealTimeMonitoring {
   /**
    * Monitor mempool health
    */
-  static async monitorMempoolHealth() {
-    const { data: mempool } = await supabase
+  static async monitorMempoolHealth(): Promise<void> {
+    const { data: mempool } = await db
       .from('blockchain_mempool')
       .select('*')
       .eq('status', 'pending');
-
     const pendingCount = mempool?.length || 0;
+    const severity: 'info' | 'warning' | 'critical' = pendingCount > 1000 ? 'warning' : 'info';
 
     await this.recordMetric({
       metricName: 'mempool_size',
       metricValue: pendingCount,
       metricUnit: 'transactions',
-      severity: pendingCount > 1000 ? 'warning' : 'info'
+      severity
     });
 
     if (pendingCount > 10000) {
@@ -384,11 +387,12 @@ export class RealTimeMonitoring {
   /**
    * Run all health checks
    */
-  static async runAllHealthChecks() {
-    await Promise.all([
+  static async runAllHealthChecks(): Promise<void> {
+    const checks: Promise<void>[] = [
       this.monitorBlockchainHealth(),
       this.monitorP2PHealth(),
       this.monitorMempoolHealth()
-    ]);
+    ];
+    await Promise.all(checks);
   }
 }
