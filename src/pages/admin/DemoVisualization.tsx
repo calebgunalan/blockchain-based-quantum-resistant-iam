@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Joyride, { CallBackProps, STATUS, Step, ACTIONS, EVENTS } from 'react-joyride';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +7,6 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AdminGate } from '@/components/PermissionGate';
 import { useNavigate } from 'react-router-dom';
-import { useBlockchain } from '@/hooks/useBlockchain';
 import { useQuantumSecurity } from '@/hooks/useQuantumSecurity';
 import { supabase } from '@/integrations/supabase/client';
 import { 
@@ -20,15 +20,12 @@ import {
   Zap,
   Lock,
   CheckCircle,
-  AlertTriangle,
   Play,
-  Pause,
   RotateCw,
   Eye,
-  Database,
-  Binary,
   Cpu,
-  Hash
+  Hash,
+  HelpCircle
 } from 'lucide-react';
 
 interface BlockVisualization {
@@ -49,9 +46,63 @@ interface QuantumStep {
   output?: string;
 }
 
+// Walkthrough steps configuration
+const walkthroughSteps: Step[] = [
+  {
+    target: '.demo-header',
+    content: 'Welcome to the Demo Visualization Dashboard! This interactive tool helps you understand and demonstrate the key features of our Quantum-Resistant Blockchain IAM System.',
+    placement: 'bottom',
+    disableBeacon: true,
+  },
+  {
+    target: '.quick-stats',
+    content: 'These cards show real-time system statistics including blockchain height, quantum protection status, trust score, and consensus activity.',
+    placement: 'bottom',
+  },
+  {
+    target: '.demo-tabs',
+    content: 'Navigate between three main visualization modules: Blockchain Consensus, Quantum Cryptography, and Zero-Trust Scoring.',
+    placement: 'top',
+  },
+  {
+    target: '.blockchain-tab',
+    content: 'The Blockchain Consensus tab visualizes how blocks are created, linked, and validated using proof-of-stake consensus.',
+    placement: 'bottom',
+  },
+  {
+    target: '.add-block-btn',
+    content: 'Click this button to simulate adding a new block to the chain. Watch as the block gets created, linked, and validated in real-time!',
+    placement: 'left',
+  },
+  {
+    target: '.block-chain-visual',
+    content: 'This chain visualization shows each block with its hash, transaction count, and validator. New blocks appear with a golden highlight animation.',
+    placement: 'top',
+  },
+  {
+    target: '.consensus-stats',
+    content: 'View key consensus metrics: 10 active validators, ~6 second block time, 2-block finality, and 235 tx/s throughput.',
+    placement: 'top',
+  },
+  {
+    target: '.quantum-tab-trigger',
+    content: 'The Quantum Cryptography tab demonstrates ML-KEM-1024 (Kyber) and ML-DSA-87 (Dilithium) algorithms step-by-step.',
+    placement: 'bottom',
+  },
+  {
+    target: '.trust-tab-trigger',
+    content: 'The Zero-Trust Scoring tab shows how the Bayesian trust framework calculates dynamic access scores based on multiple factors.',
+    placement: 'bottom',
+  },
+  {
+    target: '.reset-demo-btn',
+    content: 'Reset all demo visualizations to their initial state at any time using this button.',
+    placement: 'left',
+  },
+];
+
 export default function DemoVisualization() {
   const navigate = useNavigate();
-  const { chainStatus } = useBlockchain();
   const { quantumEnabled } = useQuantumSecurity();
   
   const [blocks, setBlocks] = useState<BlockVisualization[]>([]);
@@ -60,12 +111,44 @@ export default function DemoVisualization() {
   const [activeDemo, setActiveDemo] = useState<'blockchain' | 'quantum' | 'trust'>('blockchain');
   const [trustScore, setTrustScore] = useState(0);
   const [trustFactors, setTrustFactors] = useState<any[]>([]);
+  
+  // Walkthrough state
+  const [runTour, setRunTour] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
 
   // Initialize demo data
   useEffect(() => {
     initializeBlocks();
     initializeQuantumSteps();
     fetchTrustFactors();
+    
+    // Auto-start walkthrough after a brief delay
+    const timer = setTimeout(() => {
+      setRunTour(true);
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleJoyrideCallback = useCallback((data: CallBackProps) => {
+    const { action, index, status, type } = data;
+
+    if (([STATUS.FINISHED, STATUS.SKIPPED] as string[]).includes(status)) {
+      setRunTour(false);
+      setStepIndex(0);
+    } else if (type === EVENTS.STEP_AFTER || type === EVENTS.TARGET_NOT_FOUND) {
+      // Update step index on Next/Back
+      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
+      
+      // Switch tabs based on step
+      if (index === 6 && action === ACTIONS.NEXT) {
+        setActiveDemo('quantum');
+      } else if (index === 7 && action === ACTIONS.NEXT) {
+        setActiveDemo('trust');
+      } else if (index === 7 && action === ACTIONS.PREV) {
+        setActiveDemo('blockchain');
+      }
+    }
   }, []);
 
   const initializeBlocks = () => {
@@ -164,12 +247,16 @@ export default function DemoVisualization() {
     // Add new block with animation
     setBlocks(prev => [...prev.slice(-4), newBlock]);
 
-    // Log to audit
-    await supabase.rpc('log_audit_event', {
-      _action: 'BLOCKCHAIN_DEMO',
-      _resource: 'demo_visualization',
-      _details: { block_index: newBlock.index, demo_mode: true } as any
-    });
+    // Log to audit (ignore errors)
+    try {
+      await supabase.rpc('log_audit_event', {
+        _action: 'BLOCKCHAIN_DEMO',
+        _resource: 'demo_visualization',
+        _details: { block_index: newBlock.index, demo_mode: true } as any
+      });
+    } catch {
+      // Silently ignore audit logging errors
+    }
 
     setTimeout(() => {
       setBlocks(prev => prev.map(b => ({ ...b, isNew: false })));
@@ -212,12 +299,16 @@ export default function DemoVisualization() {
   const simulateTrustCalculation = async () => {
     setIsAnimating(true);
     
+    // Reset scores first
+    setTrustFactors(prev => prev.map(f => ({ ...f, score: 0 })));
+    
     // Animate each factor
     for (let i = 0; i < trustFactors.length; i++) {
       await new Promise(resolve => setTimeout(resolve, 600));
+      const targetScore = i === 4 ? (quantumEnabled ? 95 : 45) : [85, 78, 90, 82][i];
       setTrustFactors(prev => prev.map((f, idx) => ({
         ...f,
-        score: idx <= i ? f.score : 0
+        score: idx === i ? targetScore : f.score
       })));
     }
 
@@ -230,10 +321,74 @@ export default function DemoVisualization() {
     fetchTrustFactors();
   };
 
+  const startTour = () => {
+    setStepIndex(0);
+    setRunTour(true);
+  };
+
   return (
     <AdminGate>
+      {/* Joyride Walkthrough */}
+      <Joyride
+        steps={walkthroughSteps}
+        run={runTour}
+        stepIndex={stepIndex}
+        continuous
+        showSkipButton
+        showProgress
+        scrollToFirstStep
+        disableOverlayClose
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            primaryColor: 'hsl(45, 93%, 47%)',
+            backgroundColor: 'hsl(var(--card))',
+            textColor: 'hsl(var(--foreground))',
+            arrowColor: 'hsl(var(--card))',
+            overlayColor: 'rgba(0, 0, 0, 0.7)',
+            zIndex: 10000,
+          },
+          tooltip: {
+            borderRadius: '12px',
+            padding: '20px',
+          },
+          tooltipTitle: {
+            fontSize: '18px',
+            fontWeight: 600,
+          },
+          tooltipContent: {
+            fontSize: '14px',
+            lineHeight: '1.6',
+          },
+          buttonNext: {
+            backgroundColor: 'hsl(45, 93%, 47%)',
+            color: '#000',
+            borderRadius: '8px',
+            padding: '8px 16px',
+            fontWeight: 600,
+          },
+          buttonBack: {
+            color: 'hsl(var(--foreground))',
+            marginRight: '8px',
+          },
+          buttonSkip: {
+            color: 'hsl(var(--muted-foreground))',
+          },
+          spotlight: {
+            borderRadius: '12px',
+          },
+        }}
+        locale={{
+          back: '← Previous',
+          close: 'Close',
+          last: 'Finish Tour',
+          next: 'Next →',
+          skip: 'Skip Tour',
+        }}
+      />
+
       <div className="container mx-auto px-6 py-8 max-w-7xl">
-        <div className="mb-6">
+        <div className="mb-6 demo-header">
           <Button 
             variant="outline" 
             onClick={() => navigate("/dashboard")}
@@ -253,19 +408,30 @@ export default function DemoVisualization() {
                 Interactive visualization of blockchain consensus, quantum cryptography algorithms, and zero-trust scoring
               </p>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={resetDemo}
-              disabled={isAnimating}
-            >
-              <RotateCw className="h-4 w-4 mr-2" />
-              Reset Demo
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={startTour}
+                className="gap-2"
+              >
+                <HelpCircle className="h-4 w-4" />
+                Start Tour
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={resetDemo}
+                disabled={isAnimating}
+                className="reset-demo-btn"
+              >
+                <RotateCw className="h-4 w-4 mr-2" />
+                Reset Demo
+              </Button>
+            </div>
           </div>
         </div>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 quick-stats">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -312,17 +478,17 @@ export default function DemoVisualization() {
           </Card>
         </div>
 
-        <Tabs value={activeDemo} onValueChange={(v) => setActiveDemo(v as any)} className="space-y-4">
+        <Tabs value={activeDemo} onValueChange={(v) => setActiveDemo(v as any)} className="space-y-4 demo-tabs">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="blockchain">
+            <TabsTrigger value="blockchain" className="blockchain-tab">
               <Blocks className="h-4 w-4 mr-2" />
               Blockchain Consensus
             </TabsTrigger>
-            <TabsTrigger value="quantum">
+            <TabsTrigger value="quantum" className="quantum-tab-trigger">
               <Atom className="h-4 w-4 mr-2" />
               Quantum Cryptography
             </TabsTrigger>
-            <TabsTrigger value="trust">
+            <TabsTrigger value="trust" className="trust-tab-trigger">
               <Shield className="h-4 w-4 mr-2" />
               Zero-Trust Scoring
             </TabsTrigger>
@@ -345,7 +511,7 @@ export default function DemoVisualization() {
                   <Button 
                     onClick={simulateNewBlock} 
                     disabled={isAnimating}
-                    className="bg-[hsl(var(--demo-gold))] text-[hsl(var(--demo-gold-foreground))] hover:bg-[hsl(var(--demo-gold))]/90"
+                    className="bg-[hsl(var(--demo-gold))] text-[hsl(var(--demo-gold-foreground))] hover:bg-[hsl(var(--demo-gold))]/90 add-block-btn"
                   >
                     <Play className="h-4 w-4 mr-2" />
                     Add New Block
@@ -354,7 +520,7 @@ export default function DemoVisualization() {
               </CardHeader>
               <CardContent>
                 {/* Block Chain Visual */}
-                <div className="overflow-x-auto pb-4">
+                <div className="overflow-x-auto pb-4 block-chain-visual">
                   <div className="flex items-center gap-4 min-w-max">
                     {blocks.map((block, idx) => (
                       <div key={block.index} className="flex items-center">
@@ -396,7 +562,7 @@ export default function DemoVisualization() {
                 </div>
 
                 {/* Consensus Status */}
-                <div className="mt-6 p-4 bg-muted rounded-lg">
+                <div className="mt-6 p-4 bg-muted rounded-lg consensus-stats">
                   <h4 className="font-semibold mb-3 flex items-center gap-2">
                     <Network className="h-4 w-4" />
                     Proof-of-Stake Consensus
@@ -450,7 +616,7 @@ export default function DemoVisualization() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {quantumSteps.map((step, idx) => (
+                  {quantumSteps.map((step) => (
                     <div 
                       key={step.step} 
                       className={`p-4 rounded-lg border transition-all duration-500 ${
