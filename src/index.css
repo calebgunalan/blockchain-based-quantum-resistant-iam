@@ -47,6 +47,10 @@ All colors MUST be HSL.
     --quantum-success: 142 71% 45%;
     --quantum-info: 221 83% 53%;
     
+    /* Demo/Gold color */
+    --demo-gold: 45 93% 47%;
+    --demo-gold-foreground: 0 0% 0%;
+    
     /* Gradient system */
     --gradient-quantum: linear-gradient(135deg, hsl(var(--quantum-primary)), hsl(var(--quantum-secondary)));
     --gradient-danger: linear-gradient(135deg, hsl(var(--quantum-danger)), hsl(15 87% 56%));
@@ -111,6 +115,10 @@ All colors MUST be HSL.
     --quantum-warning: 38 92% 60%;
     --quantum-success: 142 71% 55%;
     --quantum-info: 221 83% 63%;
+    
+    /* Demo/Gold color - dark mode */
+    --demo-gold: 45 93% 55%;
+    --demo-gold-foreground: 0 0% 0%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;

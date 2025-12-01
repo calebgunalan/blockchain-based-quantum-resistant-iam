@@ -34,6 +34,7 @@ import AccountLockouts from './pages/admin/AccountLockouts';
 import AdvancedSecurity from './pages/security/AdvancedSecurity';
 import ResourceAuth from './pages/ResourceAuth';
 import UserGuidePage from './pages/UserGuide';
+import DemoVisualization from './pages/admin/DemoVisualization';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="/admin/blockchain" element={<BlockchainManagement />} />
               <Route path="/admin/account-lockouts" element={<AccountLockouts />} />
               <Route path="/admin/zero-trust" element={<ZeroTrust />} />
+              <Route path="/admin/demo" element={<DemoVisualization />} />
               <Route path="/resources/auth" element={<ResourceAuth />} />
               <Route path="/user-guide" element={<UserGuidePage />} />
               <Route path="*" element={<NotFound />} />
