@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Play } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 export default function ResourceAuth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -63,6 +63,35 @@ export default function ResourceAuth() {
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign In
+            </Button>
+            
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-card px-2 text-muted-foreground">Demo Access</span>
+              </div>
+            </div>
+            
+            <Button 
+              type="button"
+              className="w-full bg-[hsl(var(--demo-gold))] text-[hsl(var(--demo-gold-foreground))] hover:bg-[hsl(var(--demo-gold))]/90 font-semibold"
+              disabled={isLoading}
+              onClick={async () => {
+                setIsLoading(true);
+                setError("");
+                const { error: signInError } = await signIn("calebgunalan2005@gmail.com", "123123");
+                if (signInError) {
+                  setError(signInError.message || "Demo login failed");
+                  setIsLoading(false);
+                  return;
+                }
+                navigate("/resources");
+              }}
+            >
+              <Play className="mr-2 h-4 w-4" />
+              Demo Login
             </Button>
           </form>
         </CardContent>

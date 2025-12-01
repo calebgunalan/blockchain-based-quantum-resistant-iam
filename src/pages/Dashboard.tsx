@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PermissionGate, AdminGate, ModeratorGate } from "@/components/PermissionGate";
 import { QuantumProtectionBadge } from "@/components/security/QuantumProtectionBadge";
-import { Users, Shield, Settings, LogOut, Activity, Eye, BarChart3, FileText, Briefcase } from "lucide-react";
+import { Users, Shield, Settings, LogOut, Activity, Eye, BarChart3, FileText, Briefcase, Play } from "lucide-react";
 
 export default function Dashboard() {
   const { user, userRole, signOut, loading } = useAuth();
@@ -92,7 +92,18 @@ export default function Dashboard() {
     <div className="container mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Dashboard</h1>
-        <QuantumProtectionBadge />
+        <div className="flex items-center gap-3">
+          <AdminGate>
+            <Button 
+              onClick={() => navigate("/admin/demo")}
+              className="bg-[hsl(var(--demo-gold))] text-[hsl(var(--demo-gold-foreground))] hover:bg-[hsl(var(--demo-gold))]/90 font-semibold"
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Demo Visualization
+            </Button>
+          </AdminGate>
+          <QuantumProtectionBadge />
+        </div>
       </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {/* Profile Card */}
