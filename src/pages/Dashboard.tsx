@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PermissionGate, AdminGate, ModeratorGate } from "@/components/PermissionGate";
 import { QuantumProtectionBadge } from "@/components/security/QuantumProtectionBadge";
+import { QuantumSecurityInfo } from "@/components/security/QuantumSecurityInfo";
 import { Users, Shield, Settings, LogOut, Activity, Eye, BarChart3, FileText, Briefcase, Play } from "lucide-react";
 
 export default function Dashboard() {
@@ -102,6 +103,7 @@ export default function Dashboard() {
               Demo Visualization
             </Button>
           </AdminGate>
+          <QuantumSecurityInfo />
           <QuantumProtectionBadge />
         </div>
       </div>
