@@ -87,7 +87,7 @@ export function SessionManagement() {
         </div>
 
         <div className="space-y-3">
-          {sessions.map((session, index) => {
+          {sessions.filter(session => session.user_agent !== 'Unknown').map((session, index) => {
             const isCurrentSession = index === 0; // Simplified current session detection
             
             return (

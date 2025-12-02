@@ -124,11 +124,18 @@ export function RoleManagement() {
       return;
     }
 
+    // Validate role name
+    const roleName = newRole.name.toLowerCase().replace(/\s+/g, '_');
+    if (!['admin', 'moderator', 'user'].includes(roleName)) {
+      toast.error('Role name must be one of: admin, moderator, or user. Custom roles with different names are not supported.');
+      return;
+    }
+
     try {
       // Insert role permissions
       if (newRole.permissions.length > 0) {
         const rolePermissions = newRole.permissions.map(permissionId => ({
-          role: newRole.name.toLowerCase().replace(/\s+/g, '_') as 'admin' | 'moderator' | 'user',
+          role: roleName as 'admin' | 'moderator' | 'user',
           permission_id: permissionId
         }));
 
@@ -139,13 +146,13 @@ export function RoleManagement() {
         if (error) throw error;
       }
 
-      toast.success('Custom role created successfully');
+      toast.success('Role permissions assigned successfully');
       setIsCreateDialogOpen(false);
       setNewRole({ name: '', description: '', permissions: [] });
       fetchRolePermissions();
     } catch (error: any) {
       console.error('Error creating role:', error);
-      toast.error('Failed to create role: ' + error.message);
+      toast.error('Failed to assign permissions: ' + error.message);
     }
   };
 

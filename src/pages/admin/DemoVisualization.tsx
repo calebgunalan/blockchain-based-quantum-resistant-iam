@@ -9,6 +9,7 @@ import { AdminGate } from '@/components/PermissionGate';
 import { useNavigate } from 'react-router-dom';
 import { useQuantumSecurity } from '@/hooks/useQuantumSecurity';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { 
   ArrowLeft, 
   Atom, 
@@ -60,6 +61,26 @@ const walkthroughSteps: Step[] = [
     placement: 'bottom',
   },
   {
+    target: '.blockchain-height-card',
+    content: '🔗 Blockchain Height: The total number of blocks in the blockchain. Each block contains access control transactions, quantum signatures, and audit logs. This grows continuously as new blocks are added through our Proof-of-Stake consensus mechanism.',
+    placement: 'bottom',
+  },
+  {
+    target: '.quantum-status-card',
+    content: '🛡️ Quantum Status: Shows whether post-quantum cryptographic protection is enabled. ACTIVE means your identity is protected using ML-KEM-1024 and ML-DSA-87 algorithms, making it resistant to quantum computer attacks.',
+    placement: 'bottom',
+  },
+  {
+    target: '.trust-score-card',
+    content: '🎯 Trust Score: A real-time security score (0-100%) calculated using Bayesian inference. It considers device trust, network security, location, behavioral patterns, and quantum protection to dynamically determine access permissions.',
+    placement: 'bottom',
+  },
+  {
+    target: '.consensus-card',
+    content: '⚡ Consensus Status: Indicates the blockchain consensus mechanism is operational. Our Proof-of-Stake (PoS) system uses 10 validators to verify blocks with ~6 second block time and 2-block finality.',
+    placement: 'bottom',
+  },
+  {
     target: '.demo-tabs',
     content: 'Navigate between three main visualization modules: Blockchain Consensus, Quantum Cryptography, and Zero-Trust Scoring.',
     placement: 'top',
@@ -101,6 +122,106 @@ const walkthroughSteps: Step[] = [
   },
 ];
 
+// Block information walkthrough
+const blockInfoSteps: Step[] = [
+  {
+    target: '.block-chain-visual',
+    content: '📦 Each block stores: Identity transactions, quantum-resistant signatures (ML-DSA-87), access control events, audit logs, and cryptographic hashes linking to the previous block.',
+    placement: 'top',
+    disableBeacon: true,
+  },
+  {
+    target: '.consensus-stats',
+    content: '📊 Blockchain Consensus Metrics explained:',
+    placement: 'top',
+  },
+  {
+    target: '.active-validators-stat',
+    content: '👥 Active Validators (10): Independent nodes that validate and propose new blocks. Each validator stakes tokens to participate and earns rewards for honest behavior.',
+    placement: 'bottom',
+  },
+  {
+    target: '.block-time-stat',
+    content: '⏱️ Block Time (~6 seconds): Average time between new blocks. Fast block times ensure quick transaction finality while maintaining security and decentralization.',
+    placement: 'bottom',
+  },
+  {
+    target: '.finality-stat',
+    content: '✅ Finality (2 blocks): Number of confirmations needed for irreversibility. After 2 blocks (~12 seconds), transactions are cryptographically final and cannot be reversed.',
+    placement: 'bottom',
+  },
+  {
+    target: '.throughput-stat',
+    content: '🚀 Throughput (235 tx/s): Maximum transactions per second the blockchain can process. Our optimized consensus handles 235 identity/access operations per second.',
+    placement: 'bottom',
+  },
+];
+
+// Quantum demo walkthrough
+const quantumDemoSteps: Step[] = [
+  {
+    target: '.quantum-step-1',
+    content: '🔐 Step 1 - Key Generation: Uses ML-KEM-1024 (Kyber) to generate a quantum-resistant keypair based on lattice cryptography. Public key (1568 bytes) is shared; private key is securely stored.',
+    placement: 'right',
+    disableBeacon: true,
+  },
+  {
+    target: '.quantum-step-2',
+    content: '🔒 Step 2 - Encapsulation: Creates a shared secret using the public key. The ciphertext (1568 bytes) is sent, and both parties derive the same 32-byte AES-256 encryption key without transmitting it.',
+    placement: 'right',
+  },
+  {
+    target: '.quantum-step-3',
+    content: '✍️ Step 3 - Signature Creation: Signs data using ML-DSA-87 (Dilithium). Creates a 4627-byte quantum-resistant digital signature that proves authenticity and cannot be forged even by quantum computers.',
+    placement: 'right',
+  },
+  {
+    target: '.quantum-step-4',
+    content: '✅ Step 4 - Verification: Verifies the signature using the public key. Ensures data integrity and authenticity. The lattice-based hardness requires 2^256 operations to break—far beyond quantum capabilities.',
+    placement: 'right',
+  },
+  {
+    target: '.quantum-step-5',
+    content: '🔐 Step 5 - Session Establishment: Creates a quantum-safe encrypted session using the shared secret. All communication is protected with post-quantum encryption, ensuring long-term security.',
+    placement: 'right',
+  },
+];
+
+// Trust calculation walkthrough
+const trustCalculationSteps: Step[] = [
+  {
+    target: '.trust-factor-device',
+    content: '📱 Device Trust (Weight: 20%): Evaluates device security posture including OS updates, antivirus status, encryption, and device fingerprint consistency. Score: 85% means strong device security.',
+    placement: 'right',
+    disableBeacon: true,
+  },
+  {
+    target: '.trust-factor-network',
+    content: '🌐 Network Security (Weight: 25%): Analyzes network safety including VPN usage, public WiFi detection, firewall status, and threat intelligence feeds. Score: 78% indicates mostly secure network conditions.',
+    placement: 'right',
+  },
+  {
+    target: '.trust-factor-location',
+    content: '📍 Location Trust (Weight: 15%): Assesses geographic risk based on known threat regions, unusual location changes, and approved locations. Score: 90% shows expected location patterns.',
+    placement: 'right',
+  },
+  {
+    target: '.trust-factor-behavior',
+    content: '🧠 Behavioral Analysis (Weight: 25%): Monitors user behavior patterns including login times, typing patterns, navigation habits, and anomaly detection. Score: 82% indicates normal behavior.',
+    placement: 'right',
+  },
+  {
+    target: '.trust-factor-quantum',
+    content: '🛡️ Quantum Protection (Weight: 15%): Measures quantum cryptography adoption and key strength. Score: 95% (enabled) or 45% (disabled) reflects post-quantum security status.',
+    placement: 'right',
+  },
+  {
+    target: '.trust-formula',
+    content: '📐 Bayesian Calculation: T(u,t) = Σ(wᵢ × fᵢ) / Σwᵢ\n\nExample: (0.20×85 + 0.25×78 + 0.15×90 + 0.25×82 + 0.15×95) / 1.0 = (17 + 19.5 + 13.5 + 20.5 + 14.25) / 1.0 = 84.75% ≈ 85%\n\nThis dynamic score determines access permissions in real-time.',
+    placement: 'top',
+  },
+];
+
 export default function DemoVisualization() {
   const navigate = useNavigate();
   const { quantumEnabled } = useQuantumSecurity();
@@ -115,6 +236,9 @@ export default function DemoVisualization() {
   // Walkthrough state
   const [runTour, setRunTour] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
+  const [runBlockInfoTour, setRunBlockInfoTour] = useState(false);
+  const [runQuantumTour, setRunQuantumTour] = useState(false);
+  const [runTrustTour, setRunTrustTour] = useState(false);
 
   // Initialize demo data
   useEffect(() => {
@@ -218,7 +342,7 @@ export default function DemoVisualization() {
       const avgScore = data.reduce((sum, f) => sum + (f.score || 0), 0) / data.length;
       setTrustScore(Math.round(avgScore));
     } else {
-      // Demo data
+      // Demo data - Fixed duplicate Network Security
       setTrustFactors([
         { factor_name: 'Device Trust', score: 85, weight: 0.2 },
         { factor_name: 'Network Security', score: 78, weight: 0.25 },
@@ -266,6 +390,7 @@ export default function DemoVisualization() {
 
   const runQuantumDemo = async () => {
     setIsAnimating(true);
+    setRunQuantumTour(true); // Start quantum walkthrough
     
     for (let i = 0; i < quantumSteps.length; i++) {
       // Set current step to running
@@ -298,6 +423,7 @@ export default function DemoVisualization() {
 
   const simulateTrustCalculation = async () => {
     setIsAnimating(true);
+    setRunTrustTour(true); // Start trust calculation walkthrough
     
     // Reset scores first
     setTrustFactors(prev => prev.map(f => ({ ...f, score: 0 })));
@@ -316,9 +442,13 @@ export default function DemoVisualization() {
   };
 
   const resetDemo = () => {
+    toast.info('Resetting demo visualizations...', { duration: 1000 });
     initializeBlocks();
     initializeQuantumSteps();
     fetchTrustFactors();
+    setTimeout(() => {
+      toast.success('Demo reset complete!');
+    }, 500);
   };
 
   const startTour = () => {
@@ -328,7 +458,7 @@ export default function DemoVisualization() {
 
   return (
     <AdminGate>
-      {/* Joyride Walkthrough */}
+      {/* Main Walkthrough */}
       <Joyride
         steps={walkthroughSteps}
         run={runTour}
@@ -387,6 +517,73 @@ export default function DemoVisualization() {
         }}
       />
 
+      {/* Block Info Walkthrough */}
+      <Joyride
+        steps={blockInfoSteps}
+        run={runBlockInfoTour}
+        continuous
+        showSkipButton
+        showProgress
+        scrollToFirstStep
+        callback={(data) => {
+          if (([STATUS.FINISHED, STATUS.SKIPPED] as string[]).includes(data.status)) {
+            setRunBlockInfoTour(false);
+          }
+        }}
+        styles={{
+          options: {
+            primaryColor: 'hsl(45, 93%, 47%)',
+            backgroundColor: 'hsl(var(--card))',
+            textColor: 'hsl(var(--foreground))',
+            zIndex: 10000,
+          },
+        }}
+      />
+
+      {/* Quantum Demo Walkthrough */}
+      <Joyride
+        steps={quantumDemoSteps}
+        run={runQuantumTour}
+        continuous
+        showSkipButton
+        showProgress
+        callback={(data) => {
+          if (([STATUS.FINISHED, STATUS.SKIPPED] as string[]).includes(data.status)) {
+            setRunQuantumTour(false);
+          }
+        }}
+        styles={{
+          options: {
+            primaryColor: 'hsl(45, 93%, 47%)',
+            backgroundColor: 'hsl(var(--card))',
+            textColor: 'hsl(var(--foreground))',
+            zIndex: 10000,
+          },
+        }}
+      />
+
+      {/* Trust Calculation Walkthrough */}
+      <Joyride
+        steps={trustCalculationSteps}
+        run={runTrustTour}
+        continuous
+        showSkipButton
+        showProgress
+        callback={(data) => {
+          if (([STATUS.FINISHED, STATUS.SKIPPED] as string[]).includes(data.status)) {
+            setRunTrustTour(false);
+          }
+        }}
+        styles={{
+          options: {
+            primaryColor: 'hsl(45, 93%, 47%)',
+            backgroundColor: 'hsl(var(--card))',
+            textColor: 'hsl(var(--foreground))',
+            zIndex: 10000,
+          },
+        }}
+      />
+
       <div className="container mx-auto px-6 py-8 max-w-7xl">
         <div className="mb-6 demo-header">
           <Button 
@@ -432,7 +629,7 @@ export default function DemoVisualization() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 quick-stats">
-          <Card>
+          <Card className="blockchain-height-card">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -443,7 +640,7 @@ export default function DemoVisualization() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="quantum-status-card">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -454,7 +651,7 @@ export default function DemoVisualization() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="trust-score-card">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -465,7 +662,7 @@ export default function DemoVisualization() {
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="consensus-card">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -508,14 +705,23 @@ export default function DemoVisualization() {
                       Real-time view of block creation and consensus mechanism
                     </CardDescription>
                   </div>
-                  <Button 
-                    onClick={simulateNewBlock} 
-                    disabled={isAnimating}
-                    className="bg-[hsl(var(--demo-gold))] text-[hsl(var(--demo-gold-foreground))] hover:bg-[hsl(var(--demo-gold))]/90 add-block-btn"
-                  >
-                    <Play className="h-4 w-4 mr-2" />
-                    Add New Block
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      onClick={() => setRunBlockInfoTour(true)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      onClick={simulateNewBlock} 
+                      disabled={isAnimating}
+                      className="bg-[hsl(var(--demo-gold))] text-[hsl(var(--demo-gold-foreground))] hover:bg-[hsl(var(--demo-gold))]/90 add-block-btn"
+                    >
+                      <Play className="h-4 w-4 mr-2" />
+                      Add New Block
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -568,19 +774,19 @@ export default function DemoVisualization() {
                     Proof-of-Stake Consensus
                   </h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                    <div>
+                    <div className="active-validators-stat">
                       <p className="text-muted-foreground">Active Validators</p>
                       <p className="font-bold">10</p>
                     </div>
-                    <div>
+                    <div className="block-time-stat">
                       <p className="text-muted-foreground">Block Time</p>
                       <p className="font-bold">~6 seconds</p>
                     </div>
-                    <div>
+                    <div className="finality-stat">
                       <p className="text-muted-foreground">Finality</p>
                       <p className="font-bold">2 blocks</p>
                     </div>
-                    <div>
+                    <div className="throughput-stat">
                       <p className="text-muted-foreground">Throughput</p>
                       <p className="font-bold">235 tx/s</p>
                     </div>
@@ -618,8 +824,8 @@ export default function DemoVisualization() {
                 <div className="space-y-4">
                   {quantumSteps.map((step) => (
                     <div 
-                      key={step.step} 
-                      className={`p-4 rounded-lg border transition-all duration-500 ${
+                      key={step.step}
+                      className={`p-4 rounded-lg border transition-all duration-500 quantum-step-${step.step} ${
                         step.status === 'running' ? 'border-[hsl(var(--demo-gold))] bg-[hsl(var(--demo-gold))]/10 animate-pulse' :
                         step.status === 'complete' ? 'border-green-500 bg-green-500/10' :
                         'border-border'
@@ -739,29 +945,37 @@ export default function DemoVisualization() {
 
                 {/* Trust Factors */}
                 <div className="space-y-4">
-                  {trustFactors.map((factor, idx) => (
-                    <div key={idx} className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{factor.factor_name}</span>
-                        <span className="text-sm text-muted-foreground">
-                          Weight: {(factor.weight * 100).toFixed(0)}%
-                        </span>
+                  {trustFactors.map((factor, idx) => {
+                    const factorClass = factor.factor_name.toLowerCase().replace(/\s+/g, '-');
+                    return (
+                      <div key={idx} className={`space-y-2 trust-factor-${factorClass}`}>
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{factor.factor_name}</span>
+                          <span className="text-sm text-muted-foreground">
+                            Weight: {(factor.weight * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <Progress value={factor.score} className="flex-1" />
+                          <span className="text-sm font-bold w-12 text-right">{factor.score}%</span>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <Progress value={factor.score} className="flex-1" />
-                        <span className="text-sm font-bold w-12 text-right">{factor.score}%</span>
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {/* Formula Display */}
-                <div className="mt-6 p-4 bg-muted rounded-lg">
+                <div className="mt-6 p-4 bg-muted rounded-lg trust-formula">
                   <h4 className="font-semibold mb-2">Bayesian Trust Calculation Formula</h4>
                   <div className="font-mono text-sm bg-background p-3 rounded border">
                     T(u,t) = Σ(wᵢ × fᵢ(u,t)) / Σwᵢ
                     <br />
                     <span className="text-muted-foreground">where wᵢ = factor weight, fᵢ = factor score</span>
+                    <br /><br />
+                    <span className="text-xs">
+                      Current: ({trustFactors.map(f => `${(f.weight * 100).toFixed(0)}%×${f.score}`).join(' + ')}) / 100
+                      = {trustScore}%
+                    </span>
                   </div>
                 </div>
               </CardContent>
