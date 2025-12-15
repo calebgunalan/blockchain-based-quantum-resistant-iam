@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Search, Calendar, User, Activity } from "lucide-react";
 import { toast } from "sonner";
+import { AuditLogsInfoDialog, QuantumSecurityInfoDialog } from "@/components/security/InfoDialogs";
 
 interface AuditLog {
   id: string;
@@ -193,6 +194,8 @@ const AuditLogs = () => {
           <div className="flex items-center gap-2">
             <Activity className="h-6 w-6 text-primary" />
             <h1 className="text-3xl font-bold">Audit Logs</h1>
+            <AuditLogsInfoDialog />
+            <QuantumSecurityInfoDialog />
           </div>
         </div>
 

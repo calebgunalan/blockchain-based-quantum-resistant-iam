@@ -3,6 +3,7 @@ import { AdminGate } from '@/components/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ZeroTrustInfoDialog, QuantumSecurityInfoDialog } from '@/components/security/InfoDialogs';
 
 export default function ZeroTrust() {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ export default function ZeroTrust() {
           <div className="flex items-center gap-3 mb-2">
             <Shield className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">Zero Trust Security</h1>
+            <ZeroTrustInfoDialog />
+            <QuantumSecurityInfoDialog />
           </div>
           <p className="text-muted-foreground">
             Advanced zero trust policy management with real-time trust scoring. 

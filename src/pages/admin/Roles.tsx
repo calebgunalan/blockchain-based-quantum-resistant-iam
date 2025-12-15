@@ -3,6 +3,7 @@ import { AdminGate } from '@/components/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { RoleManagementInfoDialog, QuantumSecurityInfoDialog } from '@/components/security/InfoDialogs';
 
 export default function Roles() {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ export default function Roles() {
           <div className="flex items-center gap-3 mb-2">
             <Settings className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">Role Management</h1>
+            <RoleManagementInfoDialog />
+            <QuantumSecurityInfoDialog />
           </div>
           <p className="text-muted-foreground">
             Manage system roles, create custom roles, and assign permissions to roles.

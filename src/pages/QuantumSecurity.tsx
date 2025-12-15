@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, Key, Lock, Zap, AlertTriangle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { QuantumSecurityInfoDialog } from '@/components/security/InfoDialogs';
 
 export default function QuantumSecurity() {
   return (
@@ -28,6 +29,7 @@ export default function QuantumSecurity() {
             <CardTitle className="flex items-center gap-2">
               <Shield className="h-6 w-6 text-primary" />
               Quantum Security Overview
+              <QuantumSecurityInfoDialog />
             </CardTitle>
             <CardDescription>
               Understanding how quantum-resistant cryptography protects your data
