@@ -3,6 +3,7 @@ import { AttackSimulationLogs } from '@/components/admin/AttackSimulationLogs';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { AttackLogsInfoDialog, QuantumSecurityInfoDialog } from '@/components/security/InfoDialogs';
 
 export default function AttackLogs() {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ export default function AttackLogs() {
           <div className="flex items-center gap-3 mb-2">
             <Shield className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">Attack Simulation Logs</h1>
+            <AttackLogsInfoDialog />
+            <QuantumSecurityInfoDialog />
           </div>
           <p className="text-muted-foreground">
             Monitor simulated quantum attacks and system responses for security testing and validation.

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Atom, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { QuantumSecurityInfoDialog } from '@/components/security/InfoDialogs';
 
 export default function QuantumControl() {
   const navigate = useNavigate();
@@ -25,6 +26,7 @@ export default function QuantumControl() {
           <div className="flex items-center gap-3 mb-2">
             <Atom className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">Quantum Security Administration</h1>
+            <QuantumSecurityInfoDialog />
           </div>
           <p className="text-muted-foreground">
             Master control panel for quantum-resistant encryption, key management, and security demonstrations.

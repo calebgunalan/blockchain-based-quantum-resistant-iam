@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { BlockchainInfoDialog, QuantumSecurityInfoDialog } from "@/components/security/InfoDialogs";
 
 export default function BlockchainManagement() {
   const [enableP2P, setEnableP2P] = useState(false);
@@ -41,6 +42,8 @@ export default function BlockchainManagement() {
             <div className="flex items-center gap-3">
               <Shield className="h-8 w-8 text-primary" />
               <h1 className="text-3xl font-bold">Blockchain Management</h1>
+              <BlockchainInfoDialog />
+              <QuantumSecurityInfoDialog />
             </div>
             
             <div className="flex items-center gap-3">

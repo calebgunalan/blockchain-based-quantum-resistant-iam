@@ -9,6 +9,7 @@ import { ArrowLeft, Activity, Users, Shield, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { SessionInfoDialog, QuantumSecurityInfoDialog } from "@/components/security/InfoDialogs";
 
 interface UserSession {
   id: string;
@@ -203,6 +204,8 @@ export default function SessionManagement() {
           <div className="flex items-center gap-3 mb-2">
             <Activity className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">Session Management</h1>
+            <SessionInfoDialog />
+            <QuantumSecurityInfoDialog />
           </div>
           <p className="text-muted-foreground">
             Monitor active user sessions and manage user activities across the system.

@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Shield, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { PermissionManagementInfoDialog, QuantumSecurityInfoDialog } from "@/components/security/InfoDialogs";
 
 interface Permission {
   id: string;
@@ -228,6 +229,8 @@ const Permissions = () => {
           <div className="flex items-center gap-2">
             <Shield className="h-6 w-6 text-primary" />
             <h1 className="text-3xl font-bold">Permission Management</h1>
+            <PermissionManagementInfoDialog />
+            <QuantumSecurityInfoDialog />
           </div>
         </div>
 

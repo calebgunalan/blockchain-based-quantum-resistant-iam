@@ -4,6 +4,7 @@ import { ZeroKnowledgeAccessControl } from '@/components/security/ZeroKnowledgeA
 import { ThresholdSignatureManager } from '@/components/security/ThresholdSignatureManager';
 import { CrossChainIdentityManager } from '@/components/security/CrossChainIdentityManager';
 import { Shield, EyeOff, Users, Globe } from 'lucide-react';
+import { AdvancedSecurityInfoDialog, QuantumSecurityInfoDialog } from '@/components/security/InfoDialogs';
 
 export default function AdvancedSecurity() {
   return (
@@ -13,6 +14,8 @@ export default function AdvancedSecurity() {
           <div className="flex items-center gap-3 mb-2">
             <Shield className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">Advanced Security Features</h1>
+            <AdvancedSecurityInfoDialog />
+            <QuantumSecurityInfoDialog />
           </div>
           <p className="text-muted-foreground">
             Zero-knowledge proofs, threshold signatures, and privacy-preserving authentication

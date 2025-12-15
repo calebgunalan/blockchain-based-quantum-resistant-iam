@@ -3,6 +3,7 @@ import { AdminGate } from '@/components/PermissionGate';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { UserGroupsInfoDialog, QuantumSecurityInfoDialog } from '@/components/security/InfoDialogs';
 
 export default function UserGroups() {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ export default function UserGroups() {
           <div className="flex items-center gap-3 mb-2">
             <Users className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold">User Groups</h1>
+            <UserGroupsInfoDialog />
+            <QuantumSecurityInfoDialog />
           </div>
           <p className="text-muted-foreground">
             Create and manage user groups for simplified permission assignment and role management.
