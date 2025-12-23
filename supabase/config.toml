@@ -1,1 +1,4 @@
 project_id = "sehwyxblppthfjlndgnq"
+
+[functions.cleanup-stale-sessions]
+verify_jwt = false

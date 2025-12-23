@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuantumSecurity } from '@/hooks/useQuantumSecurity';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, BarChart, Bar } from 'recharts';
 import { 
   ArrowLeft, 
   Atom, 
@@ -27,7 +28,8 @@ import {
   Eye,
   Cpu,
   Hash,
-  HelpCircle
+  HelpCircle,
+  TrendingUp
 } from 'lucide-react';
 
 interface BlockVisualization {
@@ -233,6 +235,8 @@ export default function DemoVisualization() {
   const [activeDemo, setActiveDemo] = useState<'blockchain' | 'quantum' | 'trust'>('blockchain');
   const [trustScore, setTrustScore] = useState(0);
   const [trustFactors, setTrustFactors] = useState<any[]>([]);
+  const [trustScoreHistory, setTrustScoreHistory] = useState<any[]>([]);
+  const [factorRadarData, setFactorRadarData] = useState<any[]>([]);
   
   // Walkthrough state
   const [runTour, setRunTour] = useState(false);
@@ -338,21 +342,52 @@ export default function DemoVisualization() {
       .select('*')
       .limit(5);
     
+    let factors;
     if (data && data.length > 0) {
+      factors = data;
       setTrustFactors(data);
       const avgScore = data.reduce((sum, f) => sum + (f.score || 0), 0) / data.length;
       setTrustScore(Math.round(avgScore));
     } else {
       // Demo data - Fixed duplicate Network Security
-      setTrustFactors([
+      factors = [
         { factor_name: 'Device Trust', score: 85, weight: 0.2 },
         { factor_name: 'Network Security', score: 78, weight: 0.25 },
         { factor_name: 'Location Trust', score: 90, weight: 0.15 },
         { factor_name: 'Behavioral Analysis', score: 82, weight: 0.25 },
         { factor_name: 'Quantum Protection', score: quantumEnabled ? 95 : 45, weight: 0.15 }
-      ]);
+      ];
+      setTrustFactors(factors);
       setTrustScore(quantumEnabled ? 85 : 72);
     }
+
+    // Generate historical trust score data for charts
+    const now = new Date();
+    const historyData = [];
+    for (let i = 23; i >= 0; i--) {
+      const time = new Date(now.getTime() - i * 3600000);
+      const baseScore = quantumEnabled ? 85 : 72;
+      const variation = Math.sin(i * 0.5) * 5 + (Math.random() - 0.5) * 8;
+      historyData.push({
+        time: time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        score: Math.round(Math.max(50, Math.min(100, baseScore + variation))),
+        device: Math.round(85 + (Math.random() - 0.5) * 10),
+        network: Math.round(78 + (Math.random() - 0.5) * 15),
+        location: Math.round(90 + (Math.random() - 0.5) * 8),
+        behavior: Math.round(82 + (Math.random() - 0.5) * 12),
+        quantum: quantumEnabled ? 95 : 45
+      });
+    }
+    setTrustScoreHistory(historyData);
+
+    // Set radar chart data
+    setFactorRadarData([
+      { factor: 'Device', score: factors[0]?.score || 85, fullMark: 100 },
+      { factor: 'Network', score: factors[1]?.score || 78, fullMark: 100 },
+      { factor: 'Location', score: factors[2]?.score || 90, fullMark: 100 },
+      { factor: 'Behavior', score: factors[3]?.score || 82, fullMark: 100 },
+      { factor: 'Quantum', score: factors[4]?.score || (quantumEnabled ? 95 : 45), fullMark: 100 }
+    ]);
   };
 
   const simulateNewBlock = async () => {
@@ -1019,6 +1054,127 @@ export default function DemoVisualization() {
                       </div>
                     );
                   })}
+                </div>
+
+                {/* Trust Score History Charts */}
+                <div className="mt-8 space-y-6">
+                  {/* Historical Trend Chart */}
+                  <div>
+                    <h4 className="font-semibold mb-4 flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4" />
+                      Trust Score Trend (Last 24 Hours)
+                    </h4>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={trustScoreHistory}>
+                          <defs>
+                            <linearGradient id="trustGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis dataKey="time" className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                          <YAxis domain={[0, 100]} className="text-xs" tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--card))', 
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                          />
+                          <Area 
+                            type="monotone" 
+                            dataKey="score" 
+                            stroke="hsl(var(--primary))" 
+                            fill="url(#trustGradient)"
+                            strokeWidth={2}
+                            name="Trust Score"
+                          />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+
+                  {/* Factor Breakdown Charts */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Radar Chart */}
+                    <div>
+                      <h4 className="font-semibold mb-4">Factor Distribution</h4>
+                      <div className="h-64 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RadarChart data={factorRadarData}>
+                            <PolarGrid stroke="hsl(var(--border))" />
+                            <PolarAngleAxis dataKey="factor" tick={{ fill: 'hsl(var(--foreground))', fontSize: 12 }} />
+                            <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                            <Radar
+                              name="Current Score"
+                              dataKey="score"
+                              stroke="hsl(var(--primary))"
+                              fill="hsl(var(--primary))"
+                              fillOpacity={0.3}
+                              strokeWidth={2}
+                            />
+                            <Legend />
+                          </RadarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Bar Chart - Factor Comparison */}
+                    <div>
+                      <h4 className="font-semibold mb-4">Factor Comparison</h4>
+                      <div className="h-64 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={factorRadarData}>
+                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                            <XAxis dataKey="factor" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                            <YAxis domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                            <Tooltip 
+                              contentStyle={{ 
+                                backgroundColor: 'hsl(var(--card))', 
+                                border: '1px solid hsl(var(--border))',
+                                borderRadius: '8px'
+                              }}
+                            />
+                            <Bar 
+                              dataKey="score" 
+                              fill="hsl(var(--primary))" 
+                              radius={[4, 4, 0, 0]}
+                              name="Score"
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Multi-Factor Trend */}
+                  <div>
+                    <h4 className="font-semibold mb-4">Factor Trends Over Time</h4>
+                    <div className="h-64 w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={trustScoreHistory}>
+                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                          <XAxis dataKey="time" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} />
+                          <YAxis domain={[0, 100]} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: 'hsl(var(--card))', 
+                              border: '1px solid hsl(var(--border))',
+                              borderRadius: '8px'
+                            }}
+                          />
+                          <Legend />
+                          <Line type="monotone" dataKey="device" stroke="#3b82f6" strokeWidth={2} dot={false} name="Device" />
+                          <Line type="monotone" dataKey="network" stroke="#10b981" strokeWidth={2} dot={false} name="Network" />
+                          <Line type="monotone" dataKey="location" stroke="#f59e0b" strokeWidth={2} dot={false} name="Location" />
+                          <Line type="monotone" dataKey="behavior" stroke="#8b5cf6" strokeWidth={2} dot={false} name="Behavior" />
+                          <Line type="monotone" dataKey="quantum" stroke="#ec4899" strokeWidth={2} dot={false} name="Quantum" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Formula Display */}
