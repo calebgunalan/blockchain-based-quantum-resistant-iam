@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AdminGate } from '@/components/PermissionGate';
 import { useNavigate } from 'react-router-dom';
 import { useQuantumSecurity } from '@/hooks/useQuantumSecurity';
@@ -190,34 +191,34 @@ const quantumDemoSteps: Step[] = [
 // Trust calculation walkthrough
 const trustCalculationSteps: Step[] = [
   {
-    target: '.trust-factor-device',
-    content: '📱 Device Trust (Weight: 20%): Evaluates device security posture including OS updates, antivirus status, encryption, and device fingerprint consistency. Score: 85% means strong device security.',
+    target: '.trust-factor-device-trust',
+    content: '📱 Device Trust (Weight: 20%)\n\n🔍 What it measures:\n• OS version & security patches\n• Antivirus/malware protection status\n• Disk encryption enabled\n• Device fingerprint consistency\n• Trusted Platform Module (TPM) presence\n\n📊 Calculation:\nDevice Score = (OS_Patch × 0.25) + (AV_Status × 0.25) + (Encryption × 0.25) + (Fingerprint × 0.25)\n\n✅ Current Score: 85% (Strong device security posture)',
     placement: 'right',
     disableBeacon: true,
   },
   {
-    target: '.trust-factor-network',
-    content: '🌐 Network Security (Weight: 25%): Analyzes network safety including VPN usage, public WiFi detection, firewall status, and threat intelligence feeds. Score: 78% indicates mostly secure network conditions.',
+    target: '.trust-factor-network-security',
+    content: '🌐 Network Security (Weight: 25%)\n\n🔍 What it measures:\n• VPN usage detection\n• Public WiFi risk assessment\n• Firewall status verification\n• Threat intelligence feed checks\n• DNS security validation\n\n📊 Calculation:\nNetwork Score = (VPN_Factor × 0.3) + (WiFi_Risk × 0.25) + (Firewall × 0.25) + (Threat_Intel × 0.2)\n\n⚠️ Current Score: 78% (Mostly secure, minor risks detected)',
     placement: 'right',
   },
   {
-    target: '.trust-factor-location',
-    content: '📍 Location Trust (Weight: 15%): Assesses geographic risk based on known threat regions, unusual location changes, and approved locations. Score: 90% shows expected location patterns.',
+    target: '.trust-factor-location-trust',
+    content: '📍 Location Trust (Weight: 15%)\n\n🔍 What it measures:\n• Geographic risk assessment\n• Known threat region detection\n• Unusual location change patterns\n• Approved location matching\n• Travel velocity analysis\n\n📊 Calculation:\nLocation Score = (Geo_Risk × 0.3) + (Approved_Location × 0.4) + (Velocity_Check × 0.3)\n\n✅ Current Score: 90% (Expected location patterns)',
     placement: 'right',
   },
   {
-    target: '.trust-factor-behavior',
-    content: '🧠 Behavioral Analysis (Weight: 25%): Monitors user behavior patterns including login times, typing patterns, navigation habits, and anomaly detection. Score: 82% indicates normal behavior.',
+    target: '.trust-factor-behavioral-analysis',
+    content: '🧠 Behavioral Analysis (Weight: 25%)\n\n🔍 What it measures:\n• Login time patterns\n• Typing rhythm analysis\n• Navigation behavior\n• Mouse movement patterns\n• Session activity anomalies\n\n📊 Calculation:\nBehavior Score = (Time_Pattern × 0.25) + (Typing × 0.25) + (Navigation × 0.25) + (Anomaly × 0.25)\n\n✅ Current Score: 82% (Normal behavioral patterns)',
     placement: 'right',
   },
   {
-    target: '.trust-factor-quantum',
-    content: '🛡️ Quantum Protection (Weight: 15%): Measures quantum cryptography adoption and key strength. Score: 95% (enabled) or 45% (disabled) reflects post-quantum security status.',
+    target: '.trust-factor-quantum-protection',
+    content: '🛡️ Quantum Protection (Weight: 15%)\n\n🔍 What it measures:\n• Post-quantum key generation status\n• ML-KEM-1024 adoption\n• ML-DSA-87 signature usage\n• Key rotation compliance\n• Quantum-safe session encryption\n\n📊 Calculation:\nQuantum Score = Enabled ? 95% : 45%\n\n✅ Current Score: 95% (Full quantum protection active)',
     placement: 'right',
   },
   {
     target: '.trust-formula',
-    content: '📐 Bayesian Calculation: T(u,t) = Σ(wᵢ × fᵢ) / Σwᵢ\n\nExample: (0.20×85 + 0.25×78 + 0.15×90 + 0.25×82 + 0.15×95) / 1.0 = (17 + 19.5 + 13.5 + 20.5 + 14.25) / 1.0 = 84.75% ≈ 85%\n\nThis dynamic score determines access permissions in real-time.',
+    content: '📐 Bayesian Trust Calculation\n\nFormula: T(u,t) = Σ(wᵢ × fᵢ) / Σwᵢ\n\n📊 Live Calculation with Current Values:\n\n• Device Trust:     0.20 × 85 = 17.00\n• Network Security: 0.25 × 78 = 19.50\n• Location Trust:   0.15 × 90 = 13.50\n• Behavior:         0.25 × 82 = 20.50\n• Quantum:          0.15 × 95 = 14.25\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━\nTotal: (17 + 19.5 + 13.5 + 20.5 + 14.25) / 1.0\n= 84.75% ≈ 85%\n\n🎯 Access Decision: GRANTED (Score > 70% threshold)',
     placement: 'top',
   },
 ];
@@ -730,32 +731,80 @@ export default function DemoVisualization() {
                   <div className="flex items-center gap-4 min-w-max">
                     {blocks.map((block, idx) => (
                       <div key={block.index} className="flex items-center">
-                        <Card className={`w-48 transition-all duration-500 ${block.isNew ? 'ring-2 ring-[hsl(var(--demo-gold))] animate-pulse scale-105' : ''}`}>
-                          <CardContent className="p-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <Badge variant={block.index === 0 ? 'secondary' : 'default'}>
-                                Block #{block.index}
-                              </Badge>
-                              {block.isNew && (
-                                <Badge className="bg-[hsl(var(--demo-gold))] text-[hsl(var(--demo-gold-foreground))]">NEW</Badge>
-                              )}
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Card className={`w-48 transition-all duration-500 cursor-pointer hover:scale-105 hover:shadow-lg ${block.isNew ? 'ring-2 ring-[hsl(var(--demo-gold))] animate-pulse scale-105' : ''}`}>
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <Badge variant={block.index === 0 ? 'secondary' : 'default'}>
+                                    Block #{block.index}
+                                  </Badge>
+                                  {block.isNew && (
+                                    <Badge className="bg-[hsl(var(--demo-gold))] text-[hsl(var(--demo-gold-foreground))]">NEW</Badge>
+                                  )}
+                                </div>
+                                <div className="space-y-2 text-xs">
+                                  <div className="flex items-center gap-1">
+                                    <Hash className="h-3 w-3 text-muted-foreground" />
+                                    <span className="font-mono truncate">{block.hash}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Activity className="h-3 w-3 text-muted-foreground" />
+                                    <span>{block.transactions} tx</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Cpu className="h-3 w-3 text-muted-foreground" />
+                                    <span>{block.validator}</span>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-lg">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center gap-2">
+                                <Blocks className="h-5 w-5" />
+                                Block #{block.index} Details
+                              </DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <p className="text-sm font-medium text-muted-foreground">Block Hash</p>
+                                  <p className="font-mono text-sm bg-muted p-2 rounded">{block.hash}</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-sm font-medium text-muted-foreground">Previous Hash</p>
+                                  <p className="font-mono text-sm bg-muted p-2 rounded">{block.previousHash}</p>
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                  <p className="text-sm font-medium text-muted-foreground">Transactions</p>
+                                  <p className="text-lg font-bold">{block.transactions} tx</p>
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="text-sm font-medium text-muted-foreground">Validator</p>
+                                  <Badge variant="outline">{block.validator}</Badge>
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium text-muted-foreground">Timestamp</p>
+                                <p className="text-sm">{new Date(block.timestamp).toLocaleString()}</p>
+                              </div>
+                              <div className="p-3 bg-muted rounded-lg space-y-2">
+                                <p className="text-sm font-medium">Block Contents:</p>
+                                <ul className="text-xs space-y-1 text-muted-foreground">
+                                  <li>• Identity transactions with quantum signatures</li>
+                                  <li>• Access control events (ML-DSA-87 signed)</li>
+                                  <li>• Audit log entries</li>
+                                  <li>• Merkle root: {block.hash.slice(0, 8)}...merkle</li>
+                                  <li>• Consensus votes from validators</li>
+                                </ul>
+                              </div>
                             </div>
-                            <div className="space-y-2 text-xs">
-                              <div className="flex items-center gap-1">
-                                <Hash className="h-3 w-3 text-muted-foreground" />
-                                <span className="font-mono truncate">{block.hash}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Activity className="h-3 w-3 text-muted-foreground" />
-                                <span>{block.transactions} tx</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <Cpu className="h-3 w-3 text-muted-foreground" />
-                                <span>{block.validator}</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
+                          </DialogContent>
+                        </Dialog>
                         {idx < blocks.length - 1 && (
                           <div className="flex items-center px-2">
                             <div className="w-8 h-0.5 bg-primary"></div>
@@ -946,7 +995,15 @@ export default function DemoVisualization() {
                 {/* Trust Factors */}
                 <div className="space-y-4">
                   {trustFactors.map((factor, idx) => {
-                    const factorClass = factor.factor_name.toLowerCase().replace(/\s+/g, '-');
+                    // Create unique class names for each factor
+                    const factorClasses: Record<string, string> = {
+                      'Device Trust': 'device-trust',
+                      'Network Security': 'network-security',
+                      'Location Trust': 'location-trust',
+                      'Behavioral Analysis': 'behavioral-analysis',
+                      'Quantum Protection': 'quantum-protection'
+                    };
+                    const factorClass = factorClasses[factor.factor_name] || factor.factor_name.toLowerCase().replace(/\s+/g, '-');
                     return (
                       <div key={idx} className={`space-y-2 trust-factor-${factorClass}`}>
                         <div className="flex items-center justify-between">
