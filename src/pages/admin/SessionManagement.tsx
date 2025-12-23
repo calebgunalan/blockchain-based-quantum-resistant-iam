@@ -43,17 +43,27 @@ export default function SessionManagement() {
   const fetchSessions = async () => {
     try {
       // Get all active sessions across all users (admin view)
+      // Also filter out very old sessions (older than 30 days) as they are likely stale
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      
       const { data: sessionsData, error: sessionsError } = await supabase
         .from('user_sessions')
         .select('*')
         .eq('is_active', true)
+        .gte('last_activity', thirtyDaysAgo.toISOString())
         .order('last_activity', { ascending: false });
 
       if (sessionsError) throw sessionsError;
 
       // Get user emails and roles for each session
+      // Filter out sessions with Unknown user_agent as they may be stale/orphaned
+      const validSessions = (sessionsData || []).filter(session => 
+        session.user_agent && session.user_agent !== 'Unknown'
+      );
+
       const sessionsWithUserInfo = await Promise.all(
-        (sessionsData || []).map(async (session) => {
+        validSessions.map(async (session) => {
           const [profileResult, roleResult] = await Promise.all([
             supabase.from('profiles').select('email').eq('user_id', session.user_id).maybeSingle(),
             supabase.from('user_roles').select('role').eq('user_id', session.user_id).maybeSingle()
@@ -146,20 +156,33 @@ export default function SessionManagement() {
   const terminateSession = async (sessionId: string, userId: string) => {
     try {
       // Mark the session as inactive (safer with RLS)
-      const { error } = await supabase
+      // First try to update, if the session is orphaned/stale, delete it
+      const { error: updateError, count } = await supabase
         .from('user_sessions')
         .update({ is_active: false })
         .eq('id', sessionId);
 
-      if (error) throw error;
+      if (updateError) {
+        // If update fails, try to delete the session directly (for orphaned sessions)
+        const { error: deleteError } = await supabase
+          .from('user_sessions')
+          .delete()
+          .eq('id', sessionId);
+        
+        if (deleteError) throw deleteError;
+      }
 
-      // Log the action
-      await supabase.rpc('log_audit_event', {
-        _action: 'TERMINATE',
-        _resource: 'user_session',
-        _resource_id: sessionId,
-        _details: { terminated_user_id: userId } as any
-      });
+      // Log the action (ignore errors for orphaned sessions)
+      try {
+        await supabase.rpc('log_audit_event', {
+          _action: 'TERMINATE',
+          _resource: 'user_session',
+          _resource_id: sessionId,
+          _details: { terminated_user_id: userId } as any
+        });
+      } catch {
+        // Silently ignore audit log errors for orphaned sessions
+      }
 
       toast.success('Session terminated successfully');
       await Promise.all([fetchSessions(), fetchStats()]);

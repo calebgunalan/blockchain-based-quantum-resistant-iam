@@ -124,10 +124,16 @@ export function RoleManagement() {
       return;
     }
 
-    // Validate role name
+    // Validate role name - only system roles are supported
     const roleName = newRole.name.toLowerCase().replace(/\s+/g, '_');
-    if (!['admin', 'moderator', 'user'].includes(roleName)) {
-      toast.error('Role name must be one of: admin, moderator, or user. Custom roles with different names are not supported.');
+    const validRoles = ['admin', 'moderator', 'user'];
+    
+    if (!validRoles.includes(roleName)) {
+      toast.error(
+        `Invalid role name "${newRole.name}". Only system roles are supported: Admin, Moderator, or User. ` +
+        `This is because roles are stored as a database enum for security. ` +
+        `To assign permissions to a role, select one of the existing system roles.`
+      );
       return;
     }
 

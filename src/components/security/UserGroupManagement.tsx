@@ -106,7 +106,10 @@ export default function UserGroupManagement() {
     try {
       await addUserToGroup(userId, manageMembersGroup.id);
       toast.success("Member added successfully");
-      openManageMembersDialog(manageMembersGroup); // Refresh
+      // Refresh both the dialog members and update the group in state
+      const updatedGroup = { ...manageMembersGroup, member_count: (manageMembersGroup.member_count || 0) + 1 };
+      setManageMembersGroup(updatedGroup);
+      openManageMembersDialog(updatedGroup);
     } catch (error) {
       toast.error("Failed to add member");
     }
@@ -117,7 +120,10 @@ export default function UserGroupManagement() {
     try {
       await removeUserFromGroup(userId, manageMembersGroup.id);
       toast.success("Member removed successfully");
-      openManageMembersDialog(manageMembersGroup); // Refresh
+      // Refresh both the dialog members and update the group in state
+      const updatedGroup = { ...manageMembersGroup, member_count: Math.max(0, (manageMembersGroup.member_count || 0) - 1) };
+      setManageMembersGroup(updatedGroup);
+      openManageMembersDialog(updatedGroup);
     } catch (error) {
       toast.error("Failed to remove member");
     }
