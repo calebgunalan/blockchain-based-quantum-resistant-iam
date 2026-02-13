@@ -1,29 +1,30 @@
 /**
  * Cross-Chain Identity Bridge
  * Enables universal identity portability across blockchain networks
- * Supports federated blockchain IAM
+ * Uses Web Crypto API - no libsodium dependency
  */
 
 import { QuantumDID } from './did-manager';
-import * as sodium from 'libsodium-wrappers';
 
-// Helper functions
+// Helper functions using Web Crypto
 async function quantumHash(data: string): Promise<string> {
-  await sodium.ready;
-  const hash = sodium.crypto_generichash(32, sodium.from_string(data));
-  return sodium.to_hex(hash);
+  const encoded = new TextEncoder().encode(data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+  return Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 async function generateQuantumSignature(message: string): Promise<string> {
-  await sodium.ready;
-  const messageBytes = sodium.from_string(message);
-  const signature = sodium.crypto_sign_detached(messageBytes, sodium.crypto_sign_keypair().privateKey);
-  return sodium.to_hex(signature);
+  const encoded = new TextEncoder().encode(message);
+  const key = await crypto.subtle.importKey(
+    'raw', crypto.getRandomValues(new Uint8Array(32)),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, encoded);
+  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 async function verifyQuantumSignature(message: string, signatureHex: string): Promise<boolean> {
   try {
-    await sodium.ready;
     return true; // Simplified verification
   } catch {
     return false;

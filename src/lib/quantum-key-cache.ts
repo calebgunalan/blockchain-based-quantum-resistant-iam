@@ -1,5 +1,4 @@
 import { supabase } from '@/integrations/supabase/client';
-import * as sodium from 'libsodium-wrappers';
 
 export interface CachedQuantumKey {
   id: string;
@@ -24,17 +23,30 @@ export interface KeyCacheStats {
   cacheHitRate: number;
 }
 
+// Helper to encode bytes to base64
+function bytesToBase64(bytes: Uint8Array): string {
+  const binString = String.fromCharCode(...bytes);
+  return btoa(binString);
+}
+
+// Helper to decode base64 to bytes
+function base64ToBytes(b64: string): Uint8Array {
+  const binString = atob(b64);
+  const bytes = new Uint8Array(binString.length);
+  for (let i = 0; i < binString.length; i++) {
+    bytes[i] = binString.charCodeAt(i);
+  }
+  return bytes;
+}
+
 /**
  * Quantum Key Cache Manager
- * Implements performance optimization through key caching
+ * Uses Web Crypto API for encryption - no libsodium dependency
  */
 export class QuantumKeyCache {
   private static readonly CACHE_DURATION_HOURS = 24;
   private static readonly MAX_CACHE_SIZE_PER_USER = 10;
 
-  /**
-   * Cache a quantum key for reuse
-   */
   static async cacheKey(
     userId: string,
     keyType: 'signing' | 'encryption' | 'kem',
@@ -43,31 +55,23 @@ export class QuantumKeyCache {
     algorithm: string,
     masterPassword?: string
   ): Promise<string | null> {
-    await sodium.ready;
+    // Encrypt private key using AES-GCM via Web Crypto
+    const nonce = crypto.getRandomValues(new Uint8Array(12));
+    const encKeyBytes = masterPassword
+      ? new TextEncoder().encode(masterPassword.padEnd(32, '0').slice(0, 32))
+      : crypto.getRandomValues(new Uint8Array(32));
 
-    // Encrypt private key before caching
-    const encryptionKey = masterPassword 
-      ? sodium.crypto_pwhash(
-          32,
-          masterPassword,
-          sodium.randombytes_buf(16),
-          4,
-          33554432,
-          sodium.crypto_pwhash_ALG_ARGON2ID13
-        )
-      : sodium.randombytes_buf(32);
-
-    const nonce = sodium.randombytes_buf(24);
-    const privateKeyEncrypted = sodium.crypto_secretbox_easy(
-      privateKey,
-      nonce,
-      encryptionKey
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw', encKeyBytes, { name: 'AES-GCM' }, false, ['encrypt']
+    );
+    const ciphertext = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: nonce }, cryptoKey, privateKey
     );
 
     // Combine nonce + ciphertext
-    const combined = new Uint8Array(nonce.length + privateKeyEncrypted.length);
+    const combined = new Uint8Array(nonce.length + new Uint8Array(ciphertext).length);
     combined.set(nonce, 0);
-    combined.set(privateKeyEncrypted, nonce.length);
+    combined.set(new Uint8Array(ciphertext), nonce.length);
 
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + this.CACHE_DURATION_HOURS);
@@ -77,8 +81,8 @@ export class QuantumKeyCache {
       .insert({
         user_id: userId,
         key_type: keyType,
-        public_key: Buffer.from(publicKey).toString('base64'),
-        private_key_encrypted: Buffer.from(combined).toString('base64'),
+        public_key: bytesToBase64(publicKey),
+        private_key_encrypted: bytesToBase64(combined),
         algorithm,
         expires_at: expiresAt.toISOString()
       } as any)
@@ -93,9 +97,6 @@ export class QuantumKeyCache {
     return data.id;
   }
 
-  /**
-   * Retrieve a cached key
-   */
   static async getCachedKey(
     userId: string,
     keyType: 'signing' | 'encryption' | 'kem',
@@ -112,29 +113,22 @@ export class QuantumKeyCache {
       .limit(1)
       .single();
 
-    if (error || !data) {
-      return null;
-    }
+    if (error || !data) return null;
 
-    // Update cache hit count
     await supabase
       .from('quantum_key_cache')
-      .update({
-        cache_hit_count: data.cache_hit_count + 1,
-        last_used_at: new Date().toISOString()
-      })
+      .update({ cache_hit_count: data.cache_hit_count + 1, last_used_at: new Date().toISOString() })
       .eq('id', data.id);
 
-    // Decode base64 strings back to Uint8Array
-    const publicKeyBuffer = Buffer.from(data.public_key as any, 'base64');
-    const privateKeyEncBuffer = Buffer.from(data.private_key_encrypted as any, 'base64');
+    const publicKeyBuffer = base64ToBytes(data.public_key as any);
+    const privateKeyEncBuffer = base64ToBytes(data.private_key_encrypted as any);
 
     return {
       id: data.id,
       userId: data.user_id as string,
       keyType: data.key_type as 'signing' | 'encryption' | 'kem',
-      publicKey: new Uint8Array(publicKeyBuffer),
-      privateKeyEncrypted: new Uint8Array(privateKeyEncBuffer),
+      publicKey: publicKeyBuffer,
+      privateKeyEncrypted: privateKeyEncBuffer,
       algorithm: data.algorithm,
       cacheHitCount: data.cache_hit_count + 1,
       lastUsedAt: new Date(data.last_used_at as string),
@@ -144,80 +138,43 @@ export class QuantumKeyCache {
     };
   }
 
-  /**
-   * Invalidate a cached key
-   */
   static async invalidateKey(keyId: string): Promise<boolean> {
     const { error } = await supabase
       .from('quantum_key_cache')
       .update({ is_active: false })
       .eq('id', keyId);
-
     return !error;
   }
 
-  /**
-   * Clean up expired cache entries
-   */
   static async cleanupExpiredCache(): Promise<number> {
     const { data } = await supabase.rpc('cleanup_expired_quantum_cache');
     return data || 0;
   }
 
-  /**
-   * Get cache statistics for a user
-   */
   static async getCacheStats(userId: string): Promise<KeyCacheStats> {
-    const { data } = await supabase.rpc('get_quantum_cache_stats', {
-      user_id_param: userId
-    });
-
+    const { data } = await supabase.rpc('get_quantum_cache_stats', { user_id_param: userId });
     if (!data || typeof data !== 'object') {
-      return {
-        totalCachedKeys: 0,
-        activeKeys: 0,
-        expiredKeys: 0,
-        totalCacheHits: 0,
-        avgCacheHitsPerKey: 0,
-        cacheHitRate: 0
-      };
+      return { totalCachedKeys: 0, activeKeys: 0, expiredKeys: 0, totalCacheHits: 0, avgCacheHitsPerKey: 0, cacheHitRate: 0 };
     }
-
     return data as unknown as KeyCacheStats;
   }
 
-  /**
-   * Decrypt cached private key
-   */
   static async decryptCachedKey(
     encryptedKey: Uint8Array,
     masterPassword: string
   ): Promise<Uint8Array | null> {
-    await sodium.ready;
-
     try {
-      // Extract nonce and ciphertext
-      const nonce = encryptedKey.slice(0, 24);
-      const ciphertext = encryptedKey.slice(24);
+      const nonce = encryptedKey.slice(0, 12);
+      const ciphertext = encryptedKey.slice(12);
 
-      // Derive decryption key
-      const decryptionKey = sodium.crypto_pwhash(
-        32,
-        masterPassword,
-        nonce,
-        4,
-        33554432,
-        sodium.crypto_pwhash_ALG_ARGON2ID13
+      const keyBytes = new TextEncoder().encode(masterPassword.padEnd(32, '0').slice(0, 32));
+      const cryptoKey = await crypto.subtle.importKey(
+        'raw', keyBytes, { name: 'AES-GCM' }, false, ['decrypt']
       );
-
-      // Decrypt
-      const privateKey = sodium.crypto_secretbox_open_easy(
-        ciphertext,
-        nonce,
-        decryptionKey
+      const plaintext = await crypto.subtle.decrypt(
+        { name: 'AES-GCM', iv: nonce }, cryptoKey, ciphertext
       );
-
-      return privateKey;
+      return new Uint8Array(plaintext);
     } catch (error) {
       console.error('Failed to decrypt cached key:', error);
       return null;

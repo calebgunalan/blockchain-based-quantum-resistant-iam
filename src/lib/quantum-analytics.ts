@@ -1,18 +1,8 @@
-import * as sodium from 'libsodium-wrappers';
-
 /**
  * Quantum-Safe Behavioral Analytics and Risk Assessment
  * Analyzes user behavior patterns to detect anomalies and assess risk
+ * Uses Web Crypto API - no libsodium dependency
  */
-
-let sodiumReady = false;
-
-async function ensureSodiumReady() {
-  if (!sodiumReady) {
-    await sodium.ready;
-    sodiumReady = true;
-  }
-}
 
 export interface BehavioralPattern {
   userId: string;
@@ -90,8 +80,6 @@ export class BehavioralAnalyzer {
 
     ipHistory.forEach(entry => {
       locationCounts.set(entry.location, (locationCounts.get(entry.location) || 0) + 1);
-      
-      // Consider IPs from last 30 days as recent
       if (entry.timestamp > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) {
         recentIPs.add(entry.ip);
       }
@@ -124,7 +112,6 @@ export class BehavioralAnalyzer {
     const activeDays = new Map<string, Set<string>>();
 
     deviceHistory.forEach(device => {
-      // Extract device type from user agent
       const deviceType = this.extractDeviceType(device.userAgent);
       const browser = this.extractBrowser(device.userAgent);
       
@@ -174,7 +161,6 @@ export class BehavioralAnalyzer {
 
 /**
  * Risk Assessment Engine
- * Calculates user risk scores based on behavioral patterns and external factors
  */
 export class RiskAssessmentEngine {
   static async calculateRiskScore(
@@ -185,100 +171,54 @@ export class RiskAssessmentEngine {
     const riskFactors: RiskFactor[] = [];
     let totalScore = 0;
 
-    // Analyze login time anomalies
     const loginPattern = patterns.find(p => p.patternType === 'login_times');
     if (loginPattern && contextualFactors.currentLoginHour !== undefined) {
       const currentHour = contextualFactors.currentLoginHour;
       const preferredHours = loginPattern.patternData.preferredHours || [];
-      
       if (!preferredHours.includes(currentHour) && loginPattern.confidenceScore > 0.5) {
-        riskFactors.push({
-          type: 'unusual_login_time',
-          severity: 'medium',
-          description: `Login at unusual hour: ${currentHour}:00`,
-          score: 25,
-          metadata: { currentHour, preferredHours }
-        });
+        riskFactors.push({ type: 'unusual_login_time', severity: 'medium', description: `Login at unusual hour: ${currentHour}:00`, score: 25, metadata: { currentHour, preferredHours } });
         totalScore += 25;
       }
     }
 
-    // Analyze location anomalies
     const locationPattern = patterns.find(p => p.patternType === 'ip_locations');
     if (locationPattern && contextualFactors.currentLocation) {
       const currentLocation = contextualFactors.currentLocation;
       const commonLocations = locationPattern.patternData.commonLocations || [];
-      const isKnownLocation = commonLocations.some(loc => loc.location === currentLocation);
-      
+      const isKnownLocation = commonLocations.some((loc: any) => loc.location === currentLocation);
       if (!isKnownLocation && locationPattern.confidenceScore > 0.3) {
-        riskFactors.push({
-          type: 'new_location',
-          severity: 'high',
-          description: `Login from new location: ${currentLocation}`,
-          score: 40,
-          metadata: { currentLocation, commonLocations }
-        });
+        riskFactors.push({ type: 'new_location', severity: 'high', description: `Login from new location: ${currentLocation}`, score: 40, metadata: { currentLocation, commonLocations } });
         totalScore += 40;
       }
     }
 
-    // Analyze device anomalies
     const devicePattern = patterns.find(p => p.patternType === 'device_usage');
     if (devicePattern && contextualFactors.deviceFingerprint) {
       const knownDevices = devicePattern.patternData.mostUsedDevices || [];
-      const isKnownDevice = knownDevices.some(d => d.deviceId === contextualFactors.deviceFingerprint);
-      
+      const isKnownDevice = knownDevices.some((d: any) => d.deviceId === contextualFactors.deviceFingerprint);
       if (!isKnownDevice) {
-        riskFactors.push({
-          type: 'new_device',
-          severity: 'high',
-          description: 'Login from unrecognized device',
-          score: 35,
-          metadata: { deviceFingerprint: contextualFactors.deviceFingerprint }
-        });
+        riskFactors.push({ type: 'new_device', severity: 'high', description: 'Login from unrecognized device', score: 35, metadata: { deviceFingerprint: contextualFactors.deviceFingerprint } });
         totalScore += 35;
       }
     }
 
-    // Check for rapid successive logins
     if (contextualFactors.recentLoginAttempts > 5) {
-      riskFactors.push({
-        type: 'rapid_login_attempts',
-        severity: 'critical',
-        description: `${contextualFactors.recentLoginAttempts} login attempts in short period`,
-        score: 50,
-        metadata: { attempts: contextualFactors.recentLoginAttempts }
-      });
+      riskFactors.push({ type: 'rapid_login_attempts', severity: 'critical', description: `${contextualFactors.recentLoginAttempts} login attempts in short period`, score: 50, metadata: { attempts: contextualFactors.recentLoginAttempts } });
       totalScore += 50;
     }
 
-    // Check for failed authentication attempts
     if (contextualFactors.failedAttempts > 3) {
-      riskFactors.push({
-        type: 'multiple_failed_attempts',
-        severity: 'high',
-        description: `${contextualFactors.failedAttempts} failed authentication attempts`,
-        score: 30,
-        metadata: { failedAttempts: contextualFactors.failedAttempts }
-      });
+      riskFactors.push({ type: 'multiple_failed_attempts', severity: 'high', description: `${contextualFactors.failedAttempts} failed authentication attempts`, score: 30, metadata: { failedAttempts: contextualFactors.failedAttempts } });
       totalScore += 30;
     }
 
-    // Determine risk level
     let riskLevel: 'low' | 'medium' | 'high' | 'critical';
     if (totalScore >= 80) riskLevel = 'critical';
     else if (totalScore >= 50) riskLevel = 'high';
     else if (totalScore >= 25) riskLevel = 'medium';
     else riskLevel = 'low';
 
-    return {
-      userId,
-      riskLevel,
-      riskScore: Math.min(totalScore, 100),
-      riskFactors,
-      calculatedAt: new Date(),
-      expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
-    };
+    return { userId, riskLevel, riskScore: Math.min(totalScore, 100), riskFactors, calculatedAt: new Date(), expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) };
   }
 
   static shouldRequireAdditionalAuth(riskAssessment: RiskAssessment): boolean {
@@ -292,29 +232,21 @@ export class RiskAssessmentEngine {
 
 /**
  * Quantum Attack Detection System
- * Monitors for potential quantum computing attacks
  */
 export class QuantumAttackDetector {
   static async detectShorAlgorithmAttack(
     publicKeyOperations: Array<{ timestamp: Date; keySize: number; operation: string }>
   ): Promise<{ detected: boolean; confidence: number; evidence: string[] }> {
-    await ensureSodiumReady();
-    
     const evidence: string[] = [];
     let confidence = 0;
 
-    // Look for patterns indicating Shor's algorithm usage
-    const recentOps = publicKeyOperations.filter(
-      op => op.timestamp > new Date(Date.now() - 60 * 60 * 1000) // Last hour
-    );
+    const recentOps = publicKeyOperations.filter(op => op.timestamp > new Date(Date.now() - 60 * 60 * 1000));
 
-    // Unusual frequency of public key operations
     if (recentOps.length > 100) {
       evidence.push(`High frequency of public key operations: ${recentOps.length} in last hour`);
       confidence += 0.3;
     }
 
-    // Pattern of increasing key sizes (factorization attempts)
     const keySizes = recentOps.map(op => op.keySize).sort((a, b) => a - b);
     if (keySizes.length > 10) {
       const isIncreasing = keySizes.every((size, i) => i === 0 || size >= keySizes[i - 1]);
@@ -324,18 +256,13 @@ export class QuantumAttackDetector {
       }
     }
 
-    // Rapid RSA key generation (preparation for factorization)
     const rsaOps = recentOps.filter(op => op.operation.includes('RSA'));
     if (rsaOps.length > 50) {
       evidence.push(`Excessive RSA operations: ${rsaOps.length}`);
       confidence += 0.3;
     }
 
-    return {
-      detected: confidence >= 0.5,
-      confidence,
-      evidence
-    };
+    return { detected: confidence >= 0.5, confidence, evidence };
   }
 
   static async detectGroverAttack(
@@ -344,35 +271,25 @@ export class QuantumAttackDetector {
     const evidence: string[] = [];
     let confidence = 0;
 
-    const recentOps = symmetricKeyOperations.filter(
-      op => op.timestamp > new Date(Date.now() - 30 * 60 * 1000) // Last 30 minutes
-    );
-
-    // Massive number of brute force attempts (Grover's algorithm pattern)
+    const recentOps = symmetricKeyOperations.filter(op => op.timestamp > new Date(Date.now() - 30 * 60 * 1000));
     const totalAttempts = recentOps.reduce((sum, op) => sum + op.attempts, 0);
+
     if (totalAttempts > 10000) {
       evidence.push(`Massive brute force attempts: ${totalAttempts}`);
       confidence += 0.4;
     }
 
-    // Systematic search pattern (square root speedup indicator)
     if (recentOps.length > 20) {
       const attemptPattern = recentOps.map(op => op.attempts);
       const avgAttempts = attemptPattern.reduce((a, b) => a + b) / attemptPattern.length;
       const variance = attemptPattern.reduce((sum, attempts) => sum + Math.pow(attempts - avgAttempts, 2), 0) / attemptPattern.length;
-      
-      // Low variance in attempt counts suggests systematic approach
       if (variance < avgAttempts * 0.1) {
         evidence.push('Systematic search pattern detected (low variance in attempts)');
         confidence += 0.3;
       }
     }
 
-    return {
-      detected: confidence >= 0.5,
-      confidence,
-      evidence
-    };
+    return { detected: confidence >= 0.5, confidence, evidence };
   }
 
   static async detectPostQuantumDowngradeAttack(
@@ -381,12 +298,9 @@ export class QuantumAttackDetector {
     const evidence: string[] = [];
     let confidence = 0;
 
-    const recentNegotiations = negotiationHistory.filter(
-      neg => neg.timestamp > new Date(Date.now() - 2 * 60 * 60 * 1000) // Last 2 hours
-    );
-
-    // Check for attempts to downgrade to classical algorithms
+    const recentNegotiations = negotiationHistory.filter(neg => neg.timestamp > new Date(Date.now() - 2 * 60 * 60 * 1000));
     const classicalAlgorithms = ['RSA', 'ECDSA', 'DH', 'ECDH'];
+
     const downgradeAttempts = recentNegotiations.filter(neg =>
       neg.proposedAlgorithms.some(alg => classicalAlgorithms.includes(alg)) &&
       !neg.proposedAlgorithms.some(alg => alg.startsWith('ML-') || alg.includes('Kyber') || alg.includes('Dilithium'))
@@ -397,20 +311,12 @@ export class QuantumAttackDetector {
       confidence += 0.5;
     }
 
-    // Check for forced selection of weak algorithms
-    const weakSelections = recentNegotiations.filter(neg =>
-      classicalAlgorithms.includes(neg.selectedAlgorithm)
-    );
-
+    const weakSelections = recentNegotiations.filter(neg => classicalAlgorithms.includes(neg.selectedAlgorithm));
     if (weakSelections.length > 3) {
       evidence.push(`Forced selection of classical algorithms: ${weakSelections.length} times`);
       confidence += 0.4;
     }
 
-    return {
-      detected: confidence >= 0.6,
-      confidence,
-      evidence
-    };
+    return { detected: confidence >= 0.6, confidence, evidence };
   }
 }
