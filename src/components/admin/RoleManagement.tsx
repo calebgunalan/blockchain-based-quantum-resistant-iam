@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Shield, Settings, Trash2, Edit } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, Shield, Trash2, Users, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -21,166 +22,142 @@ interface Permission {
   description: string;
 }
 
-interface Role {
+interface SystemRole {
   role: string;
   permissions: Permission[];
   permission_count: number;
 }
 
-interface NewRole {
+interface CustomRole {
+  id: string;
   name: string;
-  description: string;
-  permissions: string[];
+  display_name: string;
+  description: string | null;
+  is_active: boolean;
+  created_at: string;
+  permissions: Permission[];
+  user_count: number;
 }
 
 export function RoleManagement() {
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [systemRoles, setSystemRoles] = useState<SystemRole[]>([]);
+  const [customRoles, setCustomRoles] = useState<CustomRole[]>([]);
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [newRole, setNewRole] = useState<NewRole>({
-    name: '',
-    description: '',
-    permissions: []
-  });
+  const [newRole, setNewRole] = useState({ name: '', display_name: '', description: '', permissions: [] as string[] });
 
   useEffect(() => {
-    fetchRolePermissions();
-    fetchAllPermissions();
+    fetchAll();
   }, []);
+
+  const fetchAll = async () => {
+    setLoading(true);
+    await Promise.all([fetchSystemRoles(), fetchCustomRoles(), fetchAllPermissions()]);
+    setLoading(false);
+  };
 
   const fetchAllPermissions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('permissions')
-        .select('*')
-        .order('resource, action');
-
+      const { data, error } = await supabase.from('permissions').select('*').order('resource, action');
       if (error) throw error;
       setPermissions(data || []);
     } catch (error) {
       console.error('Error fetching permissions:', error);
-      toast.error('Failed to fetch permissions');
     }
   };
 
-  const fetchRolePermissions = async () => {
+  const fetchSystemRoles = async () => {
     try {
-      const { data: rolePerms, error: roleError } = await supabase
+      const { data: rolePerms, error } = await supabase
         .from('role_permissions')
-        .select(`
-          role,
-          permission_id,
-          permissions (
-            id,
-            name,
-            resource,
-            action,
-            description
-          )
-        `);
+        .select('role, permission_id, permissions ( id, name, resource, action, description )');
+      if (error) throw error;
 
-      if (roleError) throw roleError;
-
-      // Group by role
-      const grouped = rolePerms?.reduce((acc: any, item: any) => {
-        const role = item.role;
-        if (!acc[role]) {
-          acc[role] = {
-            role,
-            permission_count: 0,
-            permissions: []
-          };
-        }
-        acc[role].permissions.push(item.permissions);
-        acc[role].permission_count++;
-        return acc;
-      }, {});
-
-      // Add default roles without permissions
-      const allRoles = ['admin', 'moderator', 'user'];
-      allRoles.forEach(role => {
-        if (!grouped[role]) {
-          grouped[role] = {
-            role,
-            permission_count: 0,
-            permissions: []
-          };
-        }
+      const grouped: Record<string, SystemRole> = {};
+      ['admin', 'moderator', 'user'].forEach(role => {
+        grouped[role] = { role, permission_count: 0, permissions: [] };
       });
-
-      setRoles(Object.values(grouped));
+      rolePerms?.forEach((item: any) => {
+        if (!grouped[item.role]) grouped[item.role] = { role: item.role, permission_count: 0, permissions: [] };
+        grouped[item.role].permissions.push(item.permissions);
+        grouped[item.role].permission_count++;
+      });
+      setSystemRoles(Object.values(grouped));
     } catch (error) {
-      console.error('Error fetching role permissions:', error);
-      toast.error('Failed to fetch role permissions');
-    } finally {
-      setLoading(false);
+      console.error('Error fetching system roles:', error);
+    }
+  };
+
+  const fetchCustomRoles = async () => {
+    try {
+      const { data: roles, error } = await supabase
+        .from('custom_roles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+
+      const enriched: CustomRole[] = [];
+      for (const role of roles || []) {
+        const [permRes, assignRes] = await Promise.all([
+          supabase.from('custom_role_permissions').select('permission_id, permissions ( id, name, resource, action, description )').eq('custom_role_id', role.id),
+          supabase.from('custom_role_assignments').select('id', { count: 'exact' }).eq('custom_role_id', role.id),
+        ]);
+        enriched.push({
+          ...role,
+          permissions: (permRes.data || []).map((p: any) => p.permissions),
+          user_count: assignRes.count || 0,
+        });
+      }
+      setCustomRoles(enriched);
+    } catch (error) {
+      console.error('Error fetching custom roles:', error);
     }
   };
 
   const createCustomRole = async () => {
-    if (!newRole.name.trim()) {
-      toast.error('Role name is required');
+    if (!newRole.name.trim() || !newRole.display_name.trim()) {
+      toast.error('Role name and display name are required');
       return;
     }
-
-    // Validate role name - only system roles are supported
     const roleName = newRole.name.toLowerCase().replace(/\s+/g, '_');
-    const validRoles = ['admin', 'moderator', 'user'];
-    
-    if (!validRoles.includes(roleName)) {
-      toast.error(
-        `Invalid role name "${newRole.name}". Only system roles are supported: Admin, Moderator, or User. ` +
-        `This is because roles are stored as a database enum for security. ` +
-        `To assign permissions to a role, select one of the existing system roles.`
-      );
+    if (['admin', 'moderator', 'user'].includes(roleName)) {
+      toast.error('Cannot use a system role name for custom roles');
       return;
     }
 
     try {
-      // Insert role permissions
+      const { data: role, error } = await supabase
+        .from('custom_roles')
+        .insert({ name: roleName, display_name: newRole.display_name, description: newRole.description || null })
+        .select()
+        .single();
+      if (error) throw error;
+
       if (newRole.permissions.length > 0) {
-        const rolePermissions = newRole.permissions.map(permissionId => ({
-          role: roleName as 'admin' | 'moderator' | 'user',
-          permission_id: permissionId
-        }));
-
-        const { error } = await supabase
-          .from('role_permissions')
-          .insert(rolePermissions);
-
-        if (error) throw error;
+        const perms = newRole.permissions.map(pid => ({ custom_role_id: role.id, permission_id: pid }));
+        const { error: permError } = await supabase.from('custom_role_permissions').insert(perms);
+        if (permError) throw permError;
       }
 
-      toast.success('Role permissions assigned successfully');
+      toast.success(`Custom role "${newRole.display_name}" created successfully`);
       setIsCreateDialogOpen(false);
-      setNewRole({ name: '', description: '', permissions: [] });
-      fetchRolePermissions();
+      setNewRole({ name: '', display_name: '', description: '', permissions: [] });
+      fetchCustomRoles();
     } catch (error: any) {
-      console.error('Error creating role:', error);
-      toast.error('Failed to assign permissions: ' + error.message);
+      console.error('Error creating custom role:', error);
+      toast.error('Failed to create role: ' + error.message);
     }
   };
 
-  const deleteRole = async (role: string) => {
-    if (['admin', 'moderator', 'user'].includes(role)) {
-      toast.error('Cannot delete system roles');
-      return;
-    }
-
+  const deleteCustomRole = async (roleId: string, roleName: string) => {
     try {
-      const { error } = await supabase
-        .from('role_permissions')
-        .delete()
-        .eq('role', role as 'admin' | 'moderator' | 'user');
-
+      const { error } = await supabase.from('custom_roles').delete().eq('id', roleId);
       if (error) throw error;
-
-      toast.success('Role deleted successfully');
-      fetchRolePermissions();
+      toast.success(`Role "${roleName}" deleted`);
+      fetchCustomRoles();
     } catch (error: any) {
-      console.error('Error deleting role:', error);
-      toast.error('Failed to delete role');
+      toast.error('Failed to delete role: ' + error.message);
     }
   };
 
@@ -195,9 +172,9 @@ export function RoleManagement() {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'admin': return 'destructive';
-      case 'moderator': return 'secondary';
-      default: return 'default';
+      case 'admin': return 'destructive' as const;
+      case 'moderator': return 'secondary' as const;
+      default: return 'default' as const;
     }
   };
 
@@ -234,14 +211,25 @@ export function RoleManagement() {
                 <DialogTitle>Create Custom Role</DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
-                <div>
-                  <Label htmlFor="role-name">Role Name</Label>
-                  <Input
-                    id="role-name"
-                    value={newRole.name}
-                    onChange={(e) => setNewRole(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="Enter role name"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="role-name">Role ID (snake_case)</Label>
+                    <Input
+                      id="role-name"
+                      value={newRole.name}
+                      onChange={(e) => setNewRole(prev => ({ ...prev, name: e.target.value.toLowerCase().replace(/\s+/g, '_') }))}
+                      placeholder="e.g. security_analyst"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="role-display">Display Name</Label>
+                    <Input
+                      id="role-display"
+                      value={newRole.display_name}
+                      onChange={(e) => setNewRole(prev => ({ ...prev, display_name: e.target.value }))}
+                      placeholder="e.g. Security Analyst"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="role-description">Description</Label>
@@ -249,24 +237,24 @@ export function RoleManagement() {
                     id="role-description"
                     value={newRole.description}
                     onChange={(e) => setNewRole(prev => ({ ...prev, description: e.target.value }))}
-                    placeholder="Enter role description"
+                    placeholder="Describe what this role can do"
                   />
                 </div>
                 <div>
-                  <Label>Permissions</Label>
-                  <div className="mt-2 max-h-60 overflow-y-auto border rounded p-4">
+                  <Label>Permissions ({newRole.permissions.length} selected)</Label>
+                  <div className="mt-2 max-h-60 overflow-y-auto border rounded p-4 space-y-1">
                     {permissions.map(permission => (
-                      <div key={permission.id} className="flex items-center space-x-2 py-2">
+                      <div key={permission.id} className="flex items-center space-x-2 py-1.5">
                         <Checkbox
-                          id={permission.id}
+                          id={`perm-${permission.id}`}
                           checked={newRole.permissions.includes(permission.id)}
                           onCheckedChange={() => togglePermission(permission.id)}
                         />
-                        <Label htmlFor={permission.id} className="flex-1 cursor-pointer">
-                          <div className="font-medium">{permission.name}</div>
-                          <div className="text-sm text-muted-foreground">
+                        <Label htmlFor={`perm-${permission.id}`} className="flex-1 cursor-pointer">
+                          <span className="font-medium">{permission.name}</span>
+                          <span className="text-muted-foreground text-xs ml-2">
                             {permission.action} on {permission.resource}
-                          </div>
+                          </span>
                         </Label>
                       </div>
                     ))}
@@ -274,88 +262,148 @@ export function RoleManagement() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={createCustomRole}>
-                  Create Role
-                </Button>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
+                <Button onClick={createCustomRole}>Create Role</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Role</TableHead>
-              <TableHead>Permissions Count</TableHead>
-              <TableHead>Permissions</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {roles.map((roleData) => (
-              <TableRow key={roleData.role}>
-                <TableCell>
-                  <Badge variant={getRoleColor(roleData.role)}>
-                    <Shield className="h-3 w-3 mr-1" />
-                    {roleData.role}
-                  </Badge>
-                </TableCell>
-                <TableCell>{roleData.permission_count}</TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {roleData.permissions.length > 0 ? (
-                      roleData.permissions.slice(0, 3).map((perm: Permission) => (
-                        <Badge key={perm.id} variant="outline" className="text-xs">
-                          {perm.name}
-                        </Badge>
-                      ))
-                    ) : (
-                      <span className="text-muted-foreground text-sm">No permissions assigned</span>
-                    )}
-                    {roleData.permissions.length > 3 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{roleData.permissions.length - 3} more
+        <Tabs defaultValue="system">
+          <TabsList className="mb-4">
+            <TabsTrigger value="system">
+              <Lock className="h-4 w-4 mr-1" />
+              System Roles ({systemRoles.length})
+            </TabsTrigger>
+            <TabsTrigger value="custom">
+              <Users className="h-4 w-4 mr-1" />
+              Custom Roles ({customRoles.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="system">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Permissions</TableHead>
+                  <TableHead>Assigned Permissions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {systemRoles.map((roleData) => (
+                  <TableRow key={roleData.role}>
+                    <TableCell>
+                      <Badge variant={getRoleColor(roleData.role)}>
+                        <Shield className="h-3 w-3 mr-1" />
+                        {roleData.role}
                       </Badge>
-                    )}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  {!['admin', 'moderator', 'user'].includes(roleData.role) && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Delete Role</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to delete the role "{roleData.role}"? 
-                            This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteRole(roleData.role)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          >
-                            Delete
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+                    </TableCell>
+                    <TableCell>{roleData.permission_count}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {roleData.permissions.length > 0 ? (
+                          roleData.permissions.slice(0, 3).map((perm) => (
+                            <Badge key={perm.id} variant="outline" className="text-xs">{perm.name}</Badge>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground text-sm">No permissions assigned</span>
+                        )}
+                        {roleData.permissions.length > 3 && (
+                          <Badge variant="outline" className="text-xs">+{roleData.permissions.length - 3} more</Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TabsContent>
+
+          <TabsContent value="custom">
+            {customRoles.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                <p>No custom roles yet. Create one to extend beyond system roles.</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Role</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Permissions</TableHead>
+                    <TableHead>Users</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customRoles.map((role) => (
+                    <TableRow key={role.id}>
+                      <TableCell>
+                        <div>
+                          <Badge variant="outline" className="font-medium">
+                            <Users className="h-3 w-3 mr-1" />
+                            {role.display_name}
+                          </Badge>
+                          <p className="text-xs text-muted-foreground mt-1">{role.name}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm max-w-[200px] truncate">{role.description || '—'}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {role.permissions.slice(0, 2).map((perm) => (
+                            <Badge key={perm.id} variant="outline" className="text-xs">{perm.name}</Badge>
+                          ))}
+                          {role.permissions.length > 2 && (
+                            <Badge variant="outline" className="text-xs">+{role.permissions.length - 2} more</Badge>
+                          )}
+                          {role.permissions.length === 0 && <span className="text-muted-foreground text-xs">None</span>}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary">{role.user_count}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={role.is_active ? 'default' : 'secondary'}>
+                          {role.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Custom Role</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Delete "{role.display_name}"? All user assignments will be removed.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteCustomRole(role.id, role.display_name)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </TabsContent>
+        </Tabs>
       </CardContent>
     </Card>
   );
