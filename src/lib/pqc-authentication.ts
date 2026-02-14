@@ -1,5 +1,5 @@
 import { PostQuantumSignatures, PostQuantumKEM } from './quantum-pqc';
-import { aesGcmDecrypt, aesGcmEncrypt } from './crypto-utils';
+import { aesGcmDecrypt, aesGcmEncrypt } from './quantum-crypto';
 
 /**
  * Post-Quantum Cryptography Authentication Module
