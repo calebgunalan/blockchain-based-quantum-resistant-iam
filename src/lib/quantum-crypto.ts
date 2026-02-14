@@ -326,3 +326,18 @@ export class QuantumMFA {
 
 // Export helpers for use by other modules
 export { toHex, fromHex, toBase64, fromBase64, fromString, toString };
+
+/**
+ * Standalone AES-GCM encrypt/decrypt helpers (consolidated from crypto-utils.ts)
+ */
+export async function aesGcmEncrypt(
+  data: Uint8Array, key: CryptoKey, nonce: Uint8Array
+): Promise<ArrayBuffer> {
+  return crypto.subtle.encrypt({ name: 'AES-GCM', iv: nonce }, key, buf(data));
+}
+
+export async function aesGcmDecrypt(
+  ciphertext: Uint8Array, key: CryptoKey, nonce: Uint8Array
+): Promise<ArrayBuffer> {
+  return crypto.subtle.decrypt({ name: 'AES-GCM', iv: nonce }, key, buf(ciphertext));
+}

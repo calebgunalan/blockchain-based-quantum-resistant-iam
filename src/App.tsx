@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { ThemeProvider } from "next-themes";
 import { BrowserCompatibilityChecker } from "@/components/BrowserCompatibilityChecker";
 import { SessionTimeoutWarning } from "@/components/security/SessionTimeoutWarning";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -49,39 +50,41 @@ const App = () => (
           <BrowserRouter>
             <BrowserCompatibilityChecker />
             <SessionTimeoutWarning />
-            <Layout>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/resource-auth" element={<ResourceAuth />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/quantum-security" element={<QuantumSecurity />} />
-              <Route path="/resources" element={<Resources />} />
-              <Route path="/settings" element={<Settings />} />
-              <Route path="/security/advanced" element={<AdvancedSecurity />} />
-              <Route path="/admin/users" element={<Users />} />
-              <Route path="/admin/roles" element={<Roles />} />
-              <Route path="/admin/permissions" element={<Permissions />} />
-              <Route path="/admin/audit-logs" element={<AuditLogs />} />
-              <Route path="/admin/audit-logs-new" element={<AuditLogsNew />} />
-              <Route path="/admin/quantum-control" element={<QuantumControl />} />
-              <Route path="/admin/user-management" element={<UserManagement />} />
-              <Route path="/admin/user-groups" element={<UserGroups />} />
-        <Route path="/admin/attack-logs" element={<AttackLogs />} />
-        <Route path="/admin/session-management" element={<SessionManagement />} />
-        <Route path="/admin/moderator-users" element={<ModeratorUsers />} />
-              <Route path="/admin/blockchain" element={<BlockchainManagement />} />
-              <Route path="/admin/account-lockouts" element={<AccountLockouts />} />
-              <Route path="/admin/zero-trust" element={<ZeroTrust />} />
-              <Route path="/admin/demo" element={<DemoVisualization />} />
-              <Route path="/resources/auth" element={<ResourceAuth />} />
-              <Route path="/user-guide" element={<UserGuidePage />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Layout>
+            <ErrorBoundary>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/auth" element={<Auth />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/resource-auth" element={<ResourceAuth />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/quantum-security" element={<QuantumSecurity />} />
+                  <Route path="/resources" element={<Resources />} />
+                  <Route path="/settings" element={<Settings />} />
+                  <Route path="/security/advanced" element={<AdvancedSecurity />} />
+                  <Route path="/admin/users" element={<Users />} />
+                  <Route path="/admin/roles" element={<Roles />} />
+                  <Route path="/admin/permissions" element={<Permissions />} />
+                  <Route path="/admin/audit-logs" element={<AuditLogs />} />
+                  <Route path="/admin/audit-logs-new" element={<AuditLogsNew />} />
+                  <Route path="/admin/quantum-control" element={<QuantumControl />} />
+                  <Route path="/admin/user-management" element={<UserManagement />} />
+                  <Route path="/admin/user-groups" element={<UserGroups />} />
+                  <Route path="/admin/attack-logs" element={<AttackLogs />} />
+                  <Route path="/admin/session-management" element={<SessionManagement />} />
+                  <Route path="/admin/moderator-users" element={<ModeratorUsers />} />
+                  <Route path="/admin/blockchain" element={<BlockchainManagement />} />
+                  <Route path="/admin/account-lockouts" element={<AccountLockouts />} />
+                  <Route path="/admin/zero-trust" element={<ZeroTrust />} />
+                  <Route path="/admin/demo" element={<DemoVisualization />} />
+                  <Route path="/resources/auth" element={<ResourceAuth />} />
+                  <Route path="/user-guide" element={<UserGuidePage />} />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            </ErrorBoundary>
         </BrowserRouter>
       </AuthProvider>
     </TooltipProvider>

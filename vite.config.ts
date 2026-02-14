@@ -20,14 +20,8 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
-    include: ['libsodium-wrappers'],
     esbuildOptions: {
       target: 'esnext',
-    },
-  },
-  build: {
-    commonjsOptions: {
-      include: [/libsodium/, /node_modules/],
     },
   },
 }));
