@@ -786,6 +786,107 @@ export type Database = {
           },
         ]
       }
+      custom_role_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          custom_role_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          custom_role_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          custom_role_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_role_assignments_custom_role_id_fkey"
+            columns: ["custom_role_id"]
+            isOneToOne: false
+            referencedRelation: "custom_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_role_permissions: {
+        Row: {
+          assigned_at: string
+          custom_role_id: string
+          id: string
+          permission_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          custom_role_id: string
+          id?: string
+          permission_id: string
+        }
+        Update: {
+          assigned_at?: string
+          custom_role_id?: string
+          id?: string
+          permission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_role_permissions_custom_role_id_fkey"
+            columns: ["custom_role_id"]
+            isOneToOne: false
+            referencedRelation: "custom_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_role_permissions_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_roles: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          display_name: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       device_fingerprints: {
         Row: {
           compliance_status: string
@@ -3745,6 +3846,10 @@ export type Database = {
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["system_role"]
+      }
+      has_custom_role: {
+        Args: { _role_name: string; _user_id: string }
+        Returns: boolean
       }
       has_enhanced_permission: {
         Args: { _action: string; _resource: string; _user_id: string }
