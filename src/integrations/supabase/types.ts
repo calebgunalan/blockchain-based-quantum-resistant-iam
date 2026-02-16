@@ -1096,6 +1096,36 @@ export type Database = {
           },
         ]
       }
+      external_timestamps: {
+        Row: {
+          block_hash: string
+          block_index: number
+          created_at: string | null
+          id: string
+          timestamp_token: string
+          tsa_url: string
+          verified: boolean | null
+        }
+        Insert: {
+          block_hash: string
+          block_index: number
+          created_at?: string | null
+          id?: string
+          timestamp_token: string
+          tsa_url: string
+          verified?: boolean | null
+        }
+        Update: {
+          block_hash?: string
+          block_index?: number
+          created_at?: string | null
+          id?: string
+          timestamp_token?: string
+          tsa_url?: string
+          verified?: boolean | null
+        }
+        Relationships: []
+      }
       federation_providers: {
         Row: {
           attribute_mappings: Json
