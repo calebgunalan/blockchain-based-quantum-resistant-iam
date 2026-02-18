@@ -10,7 +10,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PermissionGate, AdminGate, ModeratorGate } from "@/components/PermissionGate";
 import { QuantumProtectionBadge } from "@/components/security/QuantumProtectionBadge";
 import { QuantumSecurityInfo } from "@/components/security/QuantumSecurityInfo";
-import { Users, Shield, Settings, LogOut, Activity, Eye, BarChart3, FileText, Briefcase, Play } from "lucide-react";
+import { Users, Shield, Settings, LogOut, Activity, Eye, BarChart3, FileText, Briefcase, Play, FlaskConical, Monitor, UserCheck } from "lucide-react";
+import { QATDScoreWidget } from "@/components/security/QATDScoreWidget";
 
 export default function Dashboard() {
   const { user, userRole, signOut, loading } = useAuth();
@@ -346,6 +347,38 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* QATD Trust Score Widget */}
+          <AdminGate>
+            <QATDScoreWidget />
+          </AdminGate>
+
+          {/* Novel Research Tools */}
+          <AdminGate>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <FlaskConical className="h-5 w-5 text-primary" />
+                  <span>Novel Algorithms</span>
+                </CardTitle>
+                <CardDescription>Original research contributions</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" size="sm" onClick={() => navigate("/admin/novel-algorithms")} className="w-full justify-start">
+                  <FlaskConical className="h-4 w-4 mr-2" /> Algorithm Demo
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate("/admin/soc-dashboard")} className="w-full justify-start">
+                  <Monitor className="h-4 w-4 mr-2" /> SOC Dashboard
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate("/admin/benchmarks")} className="w-full justify-start">
+                  <BarChart3 className="h-4 w-4 mr-2" /> Benchmarks
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => navigate("/admin/identity-governance")} className="w-full justify-start">
+                  <UserCheck className="h-4 w-4 mr-2" /> Identity Governance
+                </Button>
+              </CardContent>
+            </Card>
+          </AdminGate>
         </div>
     </div>
   );
