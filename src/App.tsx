@@ -38,6 +38,10 @@ import UserGuidePage from './pages/UserGuide';
 import DemoVisualization from './pages/admin/DemoVisualization';
 import CryptoMigration from './pages/admin/CryptoMigration';
 import BlockExplorer from './pages/admin/BlockExplorer';
+import SOCDashboard from './pages/admin/SOCDashboard';
+import Benchmarks from './pages/admin/Benchmarks';
+import NovelAlgorithmsDemo from './pages/admin/NovelAlgorithmsDemo';
+import IdentityGovernance from './pages/admin/IdentityGovernance';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -83,6 +87,10 @@ const App = () => (
                   <Route path="/admin/demo" element={<DemoVisualization />} />
                   <Route path="/admin/crypto-migration" element={<CryptoMigration />} />
                   <Route path="/admin/block-explorer" element={<BlockExplorer />} />
+                  <Route path="/admin/soc-dashboard" element={<SOCDashboard />} />
+                  <Route path="/admin/benchmarks" element={<Benchmarks />} />
+                  <Route path="/admin/novel-algorithms" element={<NovelAlgorithmsDemo />} />
+                  <Route path="/admin/identity-governance" element={<IdentityGovernance />} />
                   <Route path="/resources/auth" element={<ResourceAuth />} />
                   <Route path="/user-guide" element={<UserGuidePage />} />
                   <Route path="*" element={<NotFound />} />

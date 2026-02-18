@@ -14,6 +14,113 @@ export type Database = {
   }
   public: {
     Tables: {
+      abac_policies: {
+        Row: {
+          created_at: string
+          created_by: string
+          decision: string
+          description: string | null
+          environment_conditions: Json
+          id: string
+          is_active: boolean
+          name: string
+          priority: number
+          resource_filter: Json
+          subject_filter: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          decision: string
+          description?: string | null
+          environment_conditions?: Json
+          id?: string
+          is_active?: boolean
+          name: string
+          priority?: number
+          resource_filter?: Json
+          subject_filter?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          decision?: string
+          description?: string | null
+          environment_conditions?: Json
+          id?: string
+          is_active?: boolean
+          name?: string
+          priority?: number
+          resource_filter?: Json
+          subject_filter?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      access_reviews: {
+        Row: {
+          access_description: string | null
+          campaign_deadline: string | null
+          campaign_name: string
+          created_at: string
+          decision_at: string | null
+          decision_notes: string | null
+          id: string
+          permission_id: string | null
+          resource_type: string | null
+          reviewer_id: string
+          risk_score: number | null
+          sod_violation: boolean | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_description?: string | null
+          campaign_deadline?: string | null
+          campaign_name: string
+          created_at?: string
+          decision_at?: string | null
+          decision_notes?: string | null
+          id?: string
+          permission_id?: string | null
+          resource_type?: string | null
+          reviewer_id: string
+          risk_score?: number | null
+          sod_violation?: boolean | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_description?: string | null
+          campaign_deadline?: string | null
+          campaign_name?: string
+          created_at?: string
+          decision_at?: string | null
+          decision_notes?: string | null
+          id?: string
+          permission_id?: string | null
+          resource_type?: string | null
+          reviewer_id?: string
+          risk_score?: number | null
+          sod_violation?: boolean | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_reviews_permission_id_fkey"
+            columns: ["permission_id"]
+            isOneToOne: false
+            referencedRelation: "permissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       adaptive_mfa_events: {
         Row: {
           challenge_id: string | null
@@ -282,6 +389,45 @@ export type Database = {
           resource_id?: string | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      basc_session_refs: {
+        Row: {
+          action_hash: string
+          block_ref: string
+          created_at: string
+          gap_detected: boolean | null
+          id: string
+          is_genesis: boolean | null
+          prev_block_ref: string | null
+          sequence_number: number
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          action_hash: string
+          block_ref: string
+          created_at?: string
+          gap_detected?: boolean | null
+          id?: string
+          is_genesis?: boolean | null
+          prev_block_ref?: string | null
+          sequence_number?: number
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          action_hash?: string
+          block_ref?: string
+          created_at?: string
+          gap_detected?: boolean | null
+          id?: string
+          is_genesis?: boolean | null
+          prev_block_ref?: string | null
+          sequence_number?: number
+          session_id?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1386,6 +1532,54 @@ export type Database = {
           status?: string | null
           title?: string
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      incident_playbook_executions: {
+        Row: {
+          actions_taken: Json
+          affected_user_id: string | null
+          blockchain_tx_id: string | null
+          executed_at: string
+          execution_time_ms: number | null
+          id: string
+          playbook_name: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          severity: string
+          status: string
+          trigger_data: Json | null
+          trigger_event: string
+        }
+        Insert: {
+          actions_taken?: Json
+          affected_user_id?: string | null
+          blockchain_tx_id?: string | null
+          executed_at?: string
+          execution_time_ms?: number | null
+          id?: string
+          playbook_name: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          status?: string
+          trigger_data?: Json | null
+          trigger_event: string
+        }
+        Update: {
+          actions_taken?: Json
+          affected_user_id?: string | null
+          blockchain_tx_id?: string | null
+          executed_at?: string
+          execution_time_ms?: number | null
+          id?: string
+          playbook_name?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          severity?: string
+          status?: string
+          trigger_data?: Json | null
+          trigger_event?: string
         }
         Relationships: []
       }
@@ -3787,6 +3981,39 @@ export type Database = {
           policy_type?: string
           severity?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      zk_nullifiers: {
+        Row: {
+          algorithm: string
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          nullifier_hash: string
+          proof_id: string
+          used_at: string
+          user_id: string | null
+        }
+        Insert: {
+          algorithm?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          nullifier_hash: string
+          proof_id: string
+          used_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          algorithm?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          nullifier_hash?: string
+          proof_id?: string
+          used_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
