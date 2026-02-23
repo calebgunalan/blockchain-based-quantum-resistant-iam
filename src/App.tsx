@@ -42,6 +42,7 @@ import SOCDashboard from './pages/admin/SOCDashboard';
 import Benchmarks from './pages/admin/Benchmarks';
 import NovelAlgorithmsDemo from './pages/admin/NovelAlgorithmsDemo';
 import IdentityGovernance from './pages/admin/IdentityGovernance';
+import PresentationDownload from './pages/admin/PresentationDownload';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -91,6 +92,7 @@ const App = () => (
                   <Route path="/admin/benchmarks" element={<Benchmarks />} />
                   <Route path="/admin/novel-algorithms" element={<NovelAlgorithmsDemo />} />
                   <Route path="/admin/identity-governance" element={<IdentityGovernance />} />
+                  <Route path="/admin/presentation" element={<PresentationDownload />} />
                   <Route path="/resources/auth" element={<ResourceAuth />} />
                   <Route path="/user-guide" element={<UserGuidePage />} />
                   <Route path="*" element={<NotFound />} />
