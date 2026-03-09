@@ -1637,7 +1637,7 @@ export type Database = {
           created_by: string
           id: string
           is_active: boolean
-          max_duration: unknown
+          max_duration: string
           policy_rules: Json
           requires_approval: boolean
           resource_type: string
@@ -1652,7 +1652,7 @@ export type Database = {
           created_by: string
           id?: string
           is_active?: boolean
-          max_duration?: unknown
+          max_duration?: string
           policy_rules?: Json
           requires_approval?: boolean
           resource_type: string
@@ -1667,7 +1667,7 @@ export type Database = {
           created_by?: string
           id?: string
           is_active?: boolean
-          max_duration?: unknown
+          max_duration?: string
           policy_rules?: Json
           requires_approval?: boolean
           resource_type?: string
@@ -2155,7 +2155,7 @@ export type Database = {
           account_name: string
           account_type: string
           auto_rotate: boolean
-          checkout_duration: unknown
+          checkout_duration: string
           created_at: string
           created_by: string
           credentials_encrypted: string
@@ -2163,7 +2163,7 @@ export type Database = {
           is_active: boolean
           last_rotation: string | null
           next_rotation: string | null
-          rotation_interval: unknown
+          rotation_interval: string
           target_system: string
           updated_at: string
         }
@@ -2172,7 +2172,7 @@ export type Database = {
           account_name: string
           account_type: string
           auto_rotate?: boolean
-          checkout_duration?: unknown
+          checkout_duration?: string
           created_at?: string
           created_by: string
           credentials_encrypted: string
@@ -2180,7 +2180,7 @@ export type Database = {
           is_active?: boolean
           last_rotation?: string | null
           next_rotation?: string | null
-          rotation_interval?: unknown
+          rotation_interval?: string
           target_system: string
           updated_at?: string
         }
@@ -2189,7 +2189,7 @@ export type Database = {
           account_name?: string
           account_type?: string
           auto_rotate?: boolean
-          checkout_duration?: unknown
+          checkout_duration?: string
           created_at?: string
           created_by?: string
           credentials_encrypted?: string
@@ -2197,7 +2197,7 @@ export type Database = {
           is_active?: boolean
           last_rotation?: string | null
           next_rotation?: string | null
-          rotation_interval?: unknown
+          rotation_interval?: string
           target_system?: string
           updated_at?: string
         }
@@ -3811,9 +3811,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          idle_timeout: unknown
+          idle_timeout: string
           max_concurrent_sessions: number
-          max_session_duration: unknown
+          max_session_duration: string
           require_reauth_for_sensitive: boolean
           updated_at: string
           user_id: string
@@ -3821,9 +3821,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          idle_timeout?: unknown
+          idle_timeout?: string
           max_concurrent_sessions?: number
-          max_session_duration?: unknown
+          max_session_duration?: string
           require_reauth_for_sensitive?: boolean
           updated_at?: string
           user_id: string
@@ -3831,9 +3831,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          idle_timeout?: unknown
+          idle_timeout?: string
           max_concurrent_sessions?: number
-          max_session_duration?: unknown
+          max_session_duration?: string
           require_reauth_for_sensitive?: boolean
           updated_at?: string
           user_id?: string
