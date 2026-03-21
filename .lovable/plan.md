@@ -1,265 +1,491 @@
+# Plan: Comprehensive Landing Page & Website Enhancement
 
-# Novel Enhancement Plan: Quantum-Resistant Blockchain IAM — Research-Grade Novelty
+## Overview
 
-## Current State Assessment (Honest Inventory)
-
-After deep code inspection, the following is **already implemented**:
-- Phase 1 (Foundation): Build fixed, libsodium removed, ErrorBoundary added, custom roles table created
-- Phase 2 (PQC): `hybrid-auth.ts` (ECDSA P-256 + ML-DSA-65), `CryptoMigration.tsx` dashboard, `rotate-quantum-keys` edge function
-- Phase 3 (Blockchain): `BlockExplorer.tsx`, `external-timestamp.ts`, `blockchain_blocks` Supabase persistence
-- Supporting infrastructure: `behavioral-analytics.ts`, `zero-trust-engine.ts`, `risk-based-auth.ts`, `did-manager.ts`, `zero-knowledge-proofs.ts`, `threshold-signatures.ts`, 5 edge functions
-
-**Gaps & Novelty Opportunities Identified:**
-- No SOC / incident-response UI
-- No ABAC engine
-- No performance benchmarking page
-- No Identity Governance dashboard
-- No SCIM endpoint
-- `threshold-signatures.ts` uses CryptoJS (classical SHA-3), not PQC
-- ZK proofs are commitment-hash simulations, not real Fiat-Shamir constructions
-- No live anomaly feed wired to the UI
-- No novel algorithm contribution — everything maps to existing literature
+Transform the current minimal Index page into a full-featured, multi-section marketing/technical landing page that serves both as a project showcase and a professional presentation for academic review. Additionally, add missing pages (Architecture, Documentation, Use Cases) and enhance meta tags.
 
 ---
 
-## The Four Novel Algorithm Contributions (Original Research)
+## Phase 1: Enhanced Meta Tags & SEO (index.html)
 
-### Novel Algorithm 1: Quantum-Adaptive Trust Decay (QATD)
+Update `index.html` with:
 
-**What it is**: A completely new continuous authentication scoring formula that blends behavioral entropy, PQC key-age decay, and blockchain-verified session lineage into a single mathematically derivable trust score.
+- Keywords meta tag (quantum-resistant, blockchain, IAM, post-quantum cryptography, ML-KEM, ML-DSA)
+- Proper og:url tag
+- Canonical link
+- Structured data (JSON-LD) for SoftwareApplication schema
+- Noscript fallback content
 
-**Why it is novel**: Existing systems (Microsoft Zero Trust, Google BeyondCorp) use static behavioral baselines. QATD introduces a **time-decay differential** where trust decays *exponentially faster* as PQC key age increases, creating a cryptographic forcing function for key freshness. No published system combines key-rotation age with behavioral drift in a single trust model.
+---
+
+## Phase 2: Complete Landing Page Rebuild (src/pages/Index.tsx)
+
+Replace the current ~130-line Index with a comprehensive single-page layout containing **11 sections**, all visible without login:
+
+### Section 1 — Hero
+
+- Animated gradient background with subtle floating particles (CSS-only)
+- H1: "Quantum-Resistant Blockchain IAM"
+- Tagline: "Post-Quantum Secure Architecture for Identity and Access Management in Critical Infrastructures"
+- Two CTAs: "Try Live Demo" (demo login) + "View Documentation" (scrolls to docs)
+- Animated system architecture mini-diagram (simplified SVG/CSS)
+
+### Section 2 — Problem Statement
+
+- "The Quantum Threat" with timeline (2024 → 2030 → 2035)
+- Current cybersecurity vulnerabilities (RSA, ECDSA broken by Shor's algorithm)
+- Statistics: "$10.5T cybercrime cost by 2025", "20M+ qubits projected by 2030"
+- Visual: threat timeline with icons
+
+### Section 3 — Solution Overview (3 pillars)
+
+- Post-Quantum Cryptography (ML-KEM-1024, ML-DSA-87)
+- Blockchain Immutability (tamper-proof audit, dual-layer consensus)
+- Zero-Trust Architecture (QATD scoring, continuous verification)
+- Visual comparison table: Traditional IAM vs This System
+
+### Section 4 — How It Works (4 steps)
+
+- Step 1: Authenticate (Hybrid classical + PQC auth)
+- Step 2: Session anchored to blockchain (BASC)
+- Step 3: Continuous trust scoring (QATD)
+- Step 4: Access governed by ABAC + ZK proofs (FZKRP)
+- Each step has an icon and brief description
+
+### Section 5 — System Architecture Diagram
+
+- Full-width interactive architecture diagram built with React components
+- Shows: User → Auth Layer → PQC Engine → Blockchain Layer → ABAC/ZK → Resources
+- Hoverable nodes showing details
+
+### Section 6 — Ten Novel Algorithms
+
+- Grid of 10 cards for: QATD, DLCAF, FZKRP, BASC, LPR-DA, HTAP, PQ-TSS, ECKG, AQC-SLN, BV-CRA
+- Each card: name, one-line description, "Learn More" expanding detail
+
+### Section 7 — Technical Specifications
+
+- Table with: Algorithm, Key Size, Security Level, Performance
+- Metrics: Identity creation ~2s, Signature verification <100ms, Throughput 235 tx/s, Block time 10s
+- Comparison with existing solutions
+
+### Section 8 — Use Cases (4 cards)
+
+- Enterprise Identity Management
+- Healthcare Records
+- Government Digital IDs
+- Financial Services
+- Each with icon, description, and specific benefit
+
+### Section 9 — Live Demo Section
+
+- Embedded demo preview with screenshots
+- "Try Demo" button (auto-login)
+- Feature walkthrough steps
+- Video placeholder section
+
+### Section 10 — Technology Stack
+
+- Grid showing: React, TypeScript, Supabase, Tailwind, ML-KEM, ML-DSA, Recharts
+- Each with logo/icon and role description
+
+### Section 11 — FAQ Accordion
+
+- 8-10 questions covering:
+  - "Why blockchain over traditional databases?"
+  - "How does this resist quantum attacks?"
+  - "What's the performance overhead?"
+  - "How does this scale?"
+  - "What are the limitations?"
+  - "How would you deploy in production?"
+  - "What NIST standards are followed?"
+  - "What's the future roadmap?"
+
+### Section 12 — Footer
+
+- Navigation links, GitHub repo link, documentation link
+- Contact information
+- "Built with quantum-resistant security" tagline
+
+---
+
+## Phase 3: New Pages
+
+### a) Architecture Page (`src/pages/Architecture.tsx`)
+
+- Full system architecture diagram (larger version)
+- Component breakdown with descriptions
+- Data flow diagrams
+- Crypto layer details
+
+### b) Documentation Page (`src/pages/Documentation.tsx`)
+
+- API documentation overview
+- Cryptographic algorithms used (with formulas)
+- Setup instructions
+- Security model explanation
+
+### c) Use Cases Page (`src/pages/UseCases.tsx`)
+
+- Expanded use case scenarios
+- Industry-specific implementations
+- ROI analysis
+
+---
+
+## Phase 4: Routing & Navigation Updates
+
+- Add routes: `/architecture`, `/documentation`, `/use-cases`
+- Landing page uses a separate top navbar (not the sidebar) with scroll-to-section links
+- Ensure Layout.tsx shows the public navbar for unauthenticated users on these pages
+
+---
+
+## Technical Details
+
+### Files to Create
+
+
+| File                                             | Purpose                                    |
+| ------------------------------------------------ | ------------------------------------------ |
+| `src/pages/Index.tsx`                            | Complete rewrite — 11-section landing page |
+| `src/components/landing/HeroSection.tsx`         | Hero with animated background              |
+| `src/components/landing/ProblemSection.tsx`      | Quantum threat problem statement           |
+| `src/components/landing/SolutionSection.tsx`     | 3-pillar solution overview                 |
+| `src/components/landing/HowItWorks.tsx`          | 4-step process                             |
+| `src/components/landing/ArchitectureDiagram.tsx` | Interactive architecture SVG               |
+| `src/components/landing/NovelAlgorithms.tsx`     | 10 algorithm cards                         |
+| `src/components/landing/TechSpecs.tsx`           | Specifications table                       |
+| `src/components/landing/UseCasesSection.tsx`     | 4 use case cards                           |
+| `src/components/landing/DemoSection.tsx`         | Live demo CTA                              |
+| `src/components/landing/TechStack.tsx`           | Technology grid                            |
+| `src/components/landing/FAQSection.tsx`          | Accordion FAQ                              |
+| `src/components/landing/LandingNav.tsx`          | Public top navbar                          |
+| `src/components/landing/Footer.tsx`              | Full footer                                |
+| `src/pages/Architecture.tsx`                     | Dedicated architecture page                |
+| `src/pages/Documentation.tsx`                    | Documentation hub                          |
+| `src/pages/UseCases.tsx`                         | Expanded use cases                         |
+
+
+### Files to Modify
+
+
+| File                        | Change                                                             |
+| --------------------------- | ------------------------------------------------------------------ |
+| `index.html`                | Enhanced meta tags, JSON-LD structured data, noscript fallback     |
+| `src/App.tsx`               | Add 3 new routes                                                   |
+| `src/components/Layout.tsx` | Show LandingNav for public pages                                   |
+| `src/index.css`             | Add landing page animation utilities (gradient keyframes, fade-in) |
+
+
+### Design System
+
+- Color scheme: Deep navy (#0F172A) primary, Cyan (#38BDF8) accent, Purple (#8B5CF6) quantum accent
+- Professional typography: existing font stack with clear hierarchy (5xl hero, 3xl section headers, lg body)
+- Consistent card hover effects with subtle scale and glow
+- Smooth scroll between sections
+- Mobile responsive (already using Tailwind breakpoints)
+- Dark mode compatible (already using CSS variables)
+
+### No New Dependencies
+
+Everything uses existing libraries: Lucide icons, shadcn/ui components, Recharts for any charts, Tailwind for styling, react-router for navigation.  
+  
+Critical Improvements Needed
+
+### 1. **Content Visibility & SEO**
+
+**Issue**: The page appears to have minimal static content **Fix**:
+
+- Add proper meta tags (description, keywords, Open Graph tags)
+- Include a clear H1 heading explaining your project
+- Add alt text to all images
+- Ensure content is visible without JavaScript
+
+### 2. **Landing Page Must-Haves**
+
+Your homepage should prominently display:
+
+```html
+<!-- Hero Section -->
+- Project title and tagline
+- One-sentence value proposition
+- Clear call-to-action button ("Try Demo" or "View Documentation")
+- Visual diagram of the system architecture
+
+<!-- Problem Statement -->
+- Why quantum-resistant IAM is needed
+- Current cybersecurity threats
+- Future quantum computing risks
+
+<!-- Solution Overview -->
+- Your approach with 3-4 key features highlighted
+- Visual comparison: Traditional IAM vs Your Solution
+
+<!-- Technology Stack -->
+- Blockchain: Ethereum/Hardhat
+- Cryptography: Quantum-resistant algorithms
+- Frontend: React
+- Backend: Node.js
+- Smart Contracts: Solidity
 
 ```
-QATD(t) = T_base × e^(-λ_b × Δbehavior) × e^(-λ_k × key_age_days / 90) × C_blockchain
-```
 
-Where:
-- `λ_b` = behavioral entropy decay constant (0.15)
-- `λ_k` = key age decay constant (0.08)
-- `C_blockchain` = blockchain continuity factor (1.0 if session lineage on-chain, 0.7 if gap detected)
+### 3. **Essential Sections Missing**
 
-Implementation: `src/lib/quantum-adaptive-trust.ts`
+Add these pages/sections:
 
----
+**a) Live Demo Section**
 
-### Novel Algorithm 2: Dual-Layer Consensus with Adaptive Finality (DLCAF)
+- Interactive demo (even if simplified)
+- Step-by-step walkthrough
+- Screenshot/video demonstrations
+- MetaMask integration guide
 
-**What it is**: A hybrid blockchain consensus mechanism that runs **two parallel voting rounds** — one using ML-DSA-87 signatures (post-quantum) and one using a lightweight PoW nonce — and only finalizes a block when *both* agree. The finality threshold adapts based on the real-time threat level from the anomaly detector.
-
-**Why it is novel**: Bitcoin uses only PoW. Ethereum uses only PoS. Academic papers propose PQC-enhanced PoW but always replace rather than layer. DLCAF is the first design that **requires simultaneous consensus from two independent cryptographic disciplines**, making it resistant to both computational attacks (quantum computers breaking PoW SHA) and lattice-math vulnerabilities (in case ML-DSA is later weakened). No prior implementation in the literature.
+**b) Architecture Diagram**
 
 ```
-FINALITY(block) = POW_valid(block, difficulty) AND MLDSA_quorum(block, signers >= ceil(N × threat_factor))
-threat_factor ∈ [0.51, 0.90] ← driven by anomaly detector output
-```
-
-Implementation: `src/lib/dual-layer-consensus.ts`
-
----
-
-### Novel Algorithm 3: Federated Zero-Knowledge Role Proof (FZKRP)
-
-**What it is**: An enhancement to the existing `zero-knowledge-proofs.ts` that replaces commitment-hash simulation with a real **Fiat-Shamir heuristic construction** over ML-DSA public keys. A user can prove "I hold a role with clearance ≥ SECRET" to any verifying party **without revealing which role they hold or their identity**.
-
-**Why it is novel**: Existing ZK-role proofs in literature (e.g., IBM IDEMIX) are based on RSA/DLP group assumptions broken by quantum computers. FZKRP is the first ZK role proof system **natively built on NIST FIPS 204 (ML-DSA) public keys**, using the module-lattice structure as the homomorphic commitment base. This constitutes an original cryptographic construction suitable for peer-reviewed publication.
+Visual showing:
+- User → MetaMask → Frontend
+- Frontend → Backend API
+- Backend → Smart Contracts
+- Smart Contracts → Blockchain
+- Quantum Crypto Layer highlighting
 
 ```
-Prove(role_set, threshold_clearance) → π
-Verify(π, public_role_registry) → {true, false}  // without learning which role or who
+
+**c) Technical Documentation**
+
+- System architecture
+- API documentation
+- Smart contract details
+- Cryptographic algorithms used
+- Setup instructions
+
+**d) Security Features**
+
+- Quantum resistance explanation
+- Cryptographic proofs
+- Blockchain immutability
+- Access control mechanisms
+
+**e) Use Cases**
+
+- Enterprise identity management
+- Healthcare records
+- Government digital IDs
+- Financial services
+
+### 4. **Visual Enhancements**
+
+**Add these visual elements**:
+
+- **System architecture diagram** (critical for technical reviews)
+- **Flowcharts** showing identity creation/verification process
+- **Comparison tables** (Traditional vs Quantum-resistant)
+- **Screenshots** of working application
+- **Code snippets** with syntax highlighting
+- **Video demo** (2-3 minutes showing key features)
+
+### 5. **Credibility Boosters**
+
+**Add**:
+
+- **Technical specifications table**
+  - Algorithm: Enhanced Ed25519
+  - Key size: 2048+ bits
+  - Hashing: SHA-3
+  - Blockchain: Ethereum-compatible
+  - Smart contracts: Solidity 0.8.19
+- **Performance metrics**
+  - Identity creation time: ~2 seconds
+  - Signature verification: <100ms
+  - Gas costs for operations
+- **Security audit section** (even if theoretical)
+  - Threat model
+  - Attack vectors mitigated
+  - Security assumptions
+
+### 6. **Project Highlights Section**
+
+Create a dedicated section showcasing:
+
+```markdown
+## Key Achievements
+
+✓ Fully functional MVP with working demo
+✓ Smart contract deployment on local blockchain
+✓ Quantum-resistant cryptographic implementation
+✓ Complete identity lifecycle management
+✓ Access control with audit logging
+✓ MetaMask wallet integration
+✓ RESTful API with comprehensive endpoints
+
 ```
 
-Fiat-Shamir construction:
-1. Commitment: `C = Hash(ML-DSA-pk || r)` where r is random blinding
-2. Challenge: `e = Hash(C || statement || nonce)` (non-interactive via random oracle)
-3. Response: `s = r ⊕ (sk × e mod q)` (lattice-adapted)
-4. Verify: `Hash(ML-DSA-pk || s ⊕ (pk × e mod q)) == C`
+### 7. **Interactive Elements**
 
-Implementation: `src/lib/fzkrp-engine.ts`
+**Add**:
 
----
+- **FAQ accordion** answering common questions
+- **Interactive feature cards** (hover effects)
+- **Code playground** or API tester
+- **Live system status indicators**
+- **Contact/feedback form**
 
-### Novel Algorithm 4: Blockchain-Anchored Session Continuity (BASC)
+### 8. **Professional Presentation**
 
-**What it is**: Every authenticated session generates a **session genesis transaction** mined into the blockchain. Each subsequent API call references the previous call's block hash, creating an on-chain session graph. If the chain shows a gap (missing references), the session is automatically invalidated — making session hijacking cryptographically detectable.
+**Design improvements**:
 
-**Why it is novel**: JWT tokens and cookies have no chain of custody. OAuth refresh tokens are stateless. BASC creates **stateful, tamper-evident session chains** where forging a session requires forging the blockchain — computationally infeasible. No IAM system in literature uses blockchain as a session continuity oracle.
+- Consistent color scheme (quantum/tech theme: blues, purples)
+- Professional typography hierarchy
+- Proper spacing and white space
+- Mobile-responsive design
+- Loading states and transitions
+- Dark mode option (optional but impressive)
+
+### 9. **Documentation Quality**
+
+**Create these documents** (linked from website):
+
+**a) [README.md](http://README.md)** with:
+
+- Project overview
+- Installation guide
+- Usage instructions
+- API documentation
+- Contributing guidelines
+
+**b) Technical White Paper** (PDF):
+
+- Problem statement
+- Proposed solution
+- Architecture details
+- Cryptographic analysis
+- Future roadmap
+
+**c) User Guide**:
+
+- How to create identity
+- How to use access control
+- MetaMask setup
+- Troubleshooting
+
+### 10. **Review Preparation Checklist**
+
+**Before final review, ensure**:
+
+- [ ] All links work (no 404 errors)
+- [ ] All images load properly
+- [ ] Responsive on mobile/tablet/desktop
+- [ ] No console errors in browser
+- [ ] Fast loading time (<3 seconds)
+- [ ] Grammar and spelling checked
+- [ ] Technical accuracy verified
+- [ ] Demo works flawlessly
+- [ ] Backup plan if live demo fails
+- [ ] Can explain every technical decision
+
+## Specific Recommendations for Final Review
+
+### 1. **Prepare a Narrative**
+
+Structure your presentation:
+
+1. Problem (2 min) - Quantum threat to current systems
+2. Solution (3 min) - Your quantum-resistant approach
+3. Demo (5 min) - Live walkthrough
+4. Technical deep-dive (5 min) - Architecture & crypto
+5. Impact (2 min) - Real-world applications
+6. Q&A (3 min) - Be ready for technical questions
+
+### 2. **Create Backup Materials**
+
+- PDF presentation slides
+- Video recording of demo
+- Printed architecture diagrams
+- Technical specification document
+- Code repository link (GitHub)
+
+### 3. **Anticipate Questions**
+
+Be ready to answer:
+
+- "Why blockchain over traditional databases?"
+- "How does this resist quantum attacks specifically?"
+- "What's the performance overhead?"
+- "How does this scale?"
+- "What are the limitations?"
+- "How would you deploy this in production?"
+
+### 4. **Add Metrics/Results**
+
+If possible, include:
+
+- Performance benchmarks
+- Security analysis results
+- User testing feedback
+- Comparison with existing solutions
+
+### 5. **Future Roadmap Section**
+
+Show vision beyond MVP:
+
+- Integration with real post-quantum algorithms (NIST standards)
+- Cross-chain compatibility
+- Mobile application
+- Enterprise features
+- Compliance certifications
+
+## Quick Wins (Implement These First)
+
+**Priority 1 (Must Have)**:
+
+1. Clear homepage with project overview
+2. Working demo or video demonstration
+3. System architecture diagram
+4. Technical documentation page
+
+**Priority 2 (Should Have)**: 5. Use cases/applications section 6. FAQ section 7. GitHub repository link 8. Contact information
+
+**Priority 3 (Nice to Have)**: 9. Interactive features 10. Performance metrics 11. Future roadmap 12. Team/about section
+
+## Sample Homepage Structure
+
+```html
+1. Hero Section (Above fold)
+   - Project title
+   - Compelling tagline
+   - CTA button
+   - Hero image/animation
+
+2. Problem Statement (100-150 words)
+   - Current security landscape
+   - Quantum threat timeline
+
+3. Solution Overview (3 feature cards)
+   - Quantum-Resistant
+   - Blockchain-Based
+   - Self-Sovereign
+
+4. How It Works (4 steps with icons)
+   - Connect Wallet
+   - Create Identity
+   - Verify
+   - Manage Access
+
+5. Technical Architecture (Diagram + explanation)
+
+6. Key Features (List with icons)
+
+7. Use Cases (3-4 scenarios)
+
+8. Demo Section (Video or live demo link)
+
+9. Technology Stack (Logos + descriptions)
+
+10. Future Vision
+
+11. Footer (Links, GitHub, Contact)
 
 ```
-Session_n.block_ref = Hash(Session_{n-1}.block_ref || action_n || timestamp_n)
-Validity: ∀n: blockchain.contains(Session_n.block_ref) AND n.timestamp - (n-1).timestamp < SESSION_WINDOW
-```
-
-Implementation: `src/lib/basc-session-manager.ts`
-
----
-
-## Complete Implementation Plan
-
-### Phase A: Novel Algorithm Library (New Core)
-
-**Files to create:**
-
-1. `src/lib/quantum-adaptive-trust.ts` — QATD algorithm
-   - Implements the exponential decay formula
-   - Reads behavioral deviation from Supabase `user_behavioral_patterns`
-   - Reads key age from `quantum_key_cache`
-   - Reads blockchain session lineage from `blockchain_blocks`
-   - Exposes `computeQATDScore(userId): Promise<number>`
-
-2. `src/lib/dual-layer-consensus.ts` — DLCAF consensus engine
-   - Wraps existing `quantum-blockchain.ts` `QuantumBlockchain`
-   - Adds ML-DSA-87 quorum signature collection before block finality
-   - Reads current threat level from `system_alerts` (critical count → higher threshold)
-   - Exposes `finalizeBlock(block, signers)` that enforces both PoW + ML-DSA quorum
-
-3. `src/lib/fzkrp-engine.ts` — Federated ZK Role Proof
-   - Replaces `zero-knowledge-proofs.ts` simulation with real Fiat-Shamir over lattice groups
-   - Uses `@noble/post-quantum` ML-DSA key material as commitment base
-   - Exposes `generateRoleProof(userId, minClearance)` and `verifyRoleProof(proof)`
-   - Nullifier set stored in Supabase `zk_nullifiers` table (new migration)
-
-4. `src/lib/basc-session-manager.ts` — Blockchain-Anchored Session Continuity
-   - On login: mines a session genesis block, stores `session_block_ref` in `user_sessions`
-   - On each action: generates `action_ref = Hash(prev_ref || action || timestamp)`
-   - Periodic validation: checks chain continuity, invalidates on gap detection
-   - Hooks into existing `useSessionManagement` hook
-
----
-
-### Phase B: IAM Enterprise Features (New Plan Phases 4-5)
-
-**Files to create:**
-
-5. `src/lib/abac-engine.ts` — Attribute-Based Access Control
-   - Policy structure: `{ subject_attrs, resource_attrs, env_conditions } → decision`
-   - Integrates with `zero-trust-engine.ts` as an override layer
-   - Stores ABAC policies in new `abac_policies` Supabase table
-   - 5 built-in policies: classification-based, time-gated, geo-fenced, clearance-level, quantum-key-age
-
-6. `src/lib/incident-playbooks.ts` — Automated Incident Response
-   - 6 playbooks: brute_force, impossible_travel, privilege_escalation, quantum_key_compromise, session_hijack_detected (via BASC), anomalous_blockchain_gap
-   - Each playbook: trigger conditions + automated actions (lock, notify, revert, mine_incident_block)
-   - The `anomalous_blockchain_gap` playbook is entirely novel — triggered only by BASC
-
-7. `src/pages/admin/IdentityGovernance.tsx` — Identity Governance Dashboard
-   - Access review campaigns with timer
-   - SoD (Separation of Duties) violation detector
-   - Orphaned account detection
-   - New `access_reviews` table migration
-
-8. `src/pages/admin/SOCDashboard.tsx` — Security Operations Center
-   - Live feed from `quantum_attack_logs` + `system_alerts` via Supabase Realtime
-   - QATD trust score heatmap across active sessions
-   - DLCAF consensus status visualization
-   - Incident playbook execution log
-
----
-
-### Phase C: Research & Publication Features (Phase 6)
-
-**Files to create:**
-
-9. `src/pages/admin/Benchmarks.tsx` — Real-Time Crypto Benchmarking
-   - Live benchmark runner: ML-KEM-768/1024, ML-DSA-65/87
-   - Classical comparison (RSA-2048 simulated, ECDSA-P256 real)
-   - QATD computation time measurement
-   - FZKRP proof generation/verification time
-   - Results persisted in `performance_benchmarks` table
-   - SVG export for paper figures
-
-10. `src/pages/admin/NovelAlgorithmsDemo.tsx` — Live Algorithm Demonstration
-    - Step-by-step QATD score computation with real formula display
-    - DLCAF dual-consensus live simulation
-    - FZKRP proof generation → QR code → verification
-    - BASC session chain visualization (block graph)
-    - Mathematical notation rendered (ASCII-art formulas in code blocks)
-
-11. `src/components/security/QATDScoreWidget.tsx` — Dashboard widget
-    - Shows user's live QATD trust score
-    - Breakdown by behavioral, key-age, and blockchain factors
-    - Integrated into `Dashboard.tsx`
-
----
-
-### Phase D: Database Migrations Required
-
-**New tables:**
-- `zk_nullifiers` — Prevents ZK proof replay (id, nullifier_hash, used_at, proof_id)
-- `abac_policies` — ABAC policy store (id, name, subject_filter JSONB, resource_filter JSONB, environment_conditions JSONB, decision, priority)
-- `access_reviews` — Identity governance campaigns (id, campaign_name, reviewer_id, user_id, permission_id, status, decision_at)
-- `basc_session_refs` — Blockchain-anchored session references (id, session_id, block_ref, action_hash, sequence_number)
-- `incident_playbook_executions` — Audit of automated responses (id, playbook_name, trigger_event, actions_taken JSONB, executed_at)
-- `performance_benchmarks` — Benchmark results (id, algorithm, operation, time_ms, key_size_bytes, run_at)
-
-**RLS policies**: All new tables get RLS — users see only their own rows, admins see all.
-
----
-
-### Phase E: SCIM 2.0 Edge Function
-
-12. `supabase/functions/scim-provisioning/index.ts`
-    - `GET /Users` → lists profiles
-    - `POST /Users` → creates user via Supabase Auth admin API
-    - `PATCH /Users/:id` → updates profile
-    - `DELETE /Users/:id` → soft-deletes
-    - Bearer token auth via `SCIM_BEARER_TOKEN` secret
-    - Returns SCIM 2.0 JSON schema
-
----
-
-## Technical Architecture — Novel Algorithm Flow
-
-```text
-                  ┌─────────────────────────────────┐
-                  │      Authentication Request       │
-                  └────────────┬────────────────────-┘
-                               │
-                  ┌────────────▼───────────────────┐
-                  │   Hybrid Auth (ECDSA + ML-DSA)  │  ← Phase 2 (done)
-                  └────────────┬───────────────────-┘
-                               │
-           ┌───────────────────▼──────────────────────┐
-           │         BASC: Mine Session Genesis Block   │  ← Novel Algo 4 (NEW)
-           └───────────────────┬─────────────────────-─┘
-                               │
-     ┌─────────────────────────▼──────────────────────────┐
-     │           QATD Continuous Trust Scoring              │  ← Novel Algo 1 (NEW)
-     │   T = T_base × e^(-λ_b×Δb) × e^(-λ_k×key_age/90) │
-     └──────┬──────────────────────────┬─────────────────-┘
-            │ Trust < 0.4              │ Trust ≥ 0.4
-            ▼                          ▼
-     ┌──────────────┐         ┌─────────────────────┐
-     │ FZKRP: Prove │         │ ABAC Policy Engine   │  ← Novel Algos 2&3 (NEW)
-     │ Role Without │         │ + DLCAF Consensus    │
-     │ Identity     │         │ for Audit Block      │
-     └──────────────┘         └──────────────────────┘
-```
-
----
-
-## Implementation Sequence
-
-1. **Database migrations** — 6 new tables
-2. **Novel algorithm libraries** — 4 new `src/lib/` files (QATD, DLCAF, FZKRP, BASC)
-3. **ABAC engine + incident playbooks** — enterprise IAM
-4. **UI pages** — SOC Dashboard, Benchmarks, Novel Algorithms Demo, Identity Governance
-5. **QATD widget** integrated into main Dashboard
-6. **SCIM edge function**
-7. **Routing** updates in `App.tsx`
-8. **Update `final_report.md`** with the 4 novel algorithms and their mathematical derivations
-
----
-
-## Why This Is Genuinely Novel
-
-| Feature | Industry Standard | This System |
-|---|---|---|
-| Trust scoring | Static behavioral baselines | QATD: decay function coupling key-rotation age + behavior |
-| Blockchain consensus | Single mechanism (PoW or PoS) | DLCAF: dual simultaneous consensus (PoW + ML-DSA quorum) |
-| ZK role proofs | RSA/DLP groups (quantum-vulnerable) | FZKRP: Fiat-Shamir over ML-DSA lattice (quantum-safe) |
-| Session integrity | JWT/cookie stateless | BASC: on-chain session graph — hijacking is cryptographically detectable |
-| Incident triggers | Behavioral rules only | `anomalous_blockchain_gap` playbook: unique to BASC |
-| ABAC integration | Separate from blockchain | Block-mined ABAC decisions create immutable access audit |
-
-These four algorithms together constitute a **first-of-its-kind** combination in the IAM literature, with each independently publishable as a short paper contribution.
