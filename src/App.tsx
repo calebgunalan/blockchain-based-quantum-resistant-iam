@@ -64,6 +64,9 @@ const App = () => (
               <Layout>
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/architecture" element={<ArchitecturePage />} />
+                  <Route path="/documentation" element={<DocumentationPage />} />
+                  <Route path="/use-cases" element={<UseCasesPage />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />

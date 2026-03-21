@@ -139,3 +139,50 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Landing page animations */
+.landing-gradient {
+  background: radial-gradient(ellipse at 30% 20%, hsl(var(--quantum-primary) / 0.08) 0%, transparent 50%),
+              radial-gradient(ellipse at 70% 80%, hsl(var(--quantum-secondary) / 0.06) 0%, transparent 50%),
+              hsl(var(--background));
+}
+
+.landing-fade-in {
+  animation: landingFadeIn 0.8s ease-out both;
+}
+
+@keyframes landingFadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.landing-particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.15;
+  animation: landingFloat 20s ease-in-out infinite;
+}
+.landing-particle-1 {
+  width: 300px; height: 300px;
+  top: 10%; left: 10%;
+  background: hsl(var(--quantum-primary));
+  animation-delay: 0s;
+}
+.landing-particle-2 {
+  width: 200px; height: 200px;
+  top: 60%; right: 15%;
+  background: hsl(var(--quantum-secondary));
+  animation-delay: -7s;
+}
+.landing-particle-3 {
+  width: 150px; height: 150px;
+  bottom: 20%; left: 40%;
+  background: hsl(var(--quantum-info));
+  animation-delay: -14s;
+}
+
+@keyframes landingFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.05); }
+  66% { transform: translate(-20px, 15px) scale(0.95); }
+}

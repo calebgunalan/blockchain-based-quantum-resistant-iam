@@ -7,21 +7,37 @@ interface LayoutProps {
   children: ReactNode;
 }
 
+const PUBLIC_ROUTES = ["/", "/architecture", "/documentation", "/use-cases"];
+
 export default function Layout({ children }: LayoutProps) {
   const { user } = useAuth();
   const location = useLocation();
-  
+
+  const isPublicPage = PUBLIC_ROUTES.includes(location.pathname);
   const isResourceRoute = location.pathname.startsWith('/resources') || location.pathname === '/resource-auth';
+
+  // Public pages handle their own nav (LandingNav)
+  if (isPublicPage) {
+    return <>{children}</>;
+  }
 
   if (!user) {
     return <>{children}</>;
   }
 
-  // Don't show IAM navigation on resource access pages
   if (isResourceRoute) {
     return <>{children}</>;
   }
 
+  return (
+    <div className="min-h-screen bg-background">
+      <Navigation />
+      <main className="ml-64 min-h-screen">
+        {children}
+      </main>
+    </div>
+  );
+}
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
