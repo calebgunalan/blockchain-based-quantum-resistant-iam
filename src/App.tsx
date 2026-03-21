@@ -43,6 +43,9 @@ import Benchmarks from './pages/admin/Benchmarks';
 import NovelAlgorithmsDemo from './pages/admin/NovelAlgorithmsDemo';
 import IdentityGovernance from './pages/admin/IdentityGovernance';
 import PresentationDownload from './pages/admin/PresentationDownload';
+import ArchitecturePage from './pages/Architecture';
+import DocumentationPage from './pages/Documentation';
+import UseCasesPage from './pages/UseCases';
 import NotFound from './pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -61,6 +64,9 @@ const App = () => (
               <Layout>
                 <Routes>
                   <Route path="/" element={<Index />} />
+                  <Route path="/architecture" element={<ArchitecturePage />} />
+                  <Route path="/documentation" element={<DocumentationPage />} />
+                  <Route path="/use-cases" element={<UseCasesPage />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   <Route path="/reset-password" element={<ResetPassword />} />
