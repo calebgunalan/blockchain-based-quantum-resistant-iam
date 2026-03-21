@@ -16,7 +16,6 @@ export default function Layout({ children }: LayoutProps) {
   const isPublicPage = PUBLIC_ROUTES.includes(location.pathname);
   const isResourceRoute = location.pathname.startsWith('/resources') || location.pathname === '/resource-auth';
 
-  // Public pages handle their own nav (LandingNav)
   if (isPublicPage) {
     return <>{children}</>;
   }
@@ -29,15 +28,6 @@ export default function Layout({ children }: LayoutProps) {
     return <>{children}</>;
   }
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      <main className="ml-64 min-h-screen">
-        {children}
-      </main>
-    </div>
-  );
-}
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
