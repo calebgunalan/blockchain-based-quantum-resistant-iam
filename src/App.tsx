@@ -43,6 +43,7 @@ import Benchmarks from './pages/admin/Benchmarks';
 import NovelAlgorithmsDemo from './pages/admin/NovelAlgorithmsDemo';
 import IdentityGovernance from './pages/admin/IdentityGovernance';
 import PresentationDownload from './pages/admin/PresentationDownload';
+import PresentationBuilder from './pages/PresentationBuilder';
 import ArchitecturePage from './pages/Architecture';
 import DocumentationPage from './pages/Documentation';
 import UseCasesPage from './pages/UseCases';
@@ -99,6 +100,7 @@ const App = () => (
                   <Route path="/admin/novel-algorithms" element={<NovelAlgorithmsDemo />} />
                   <Route path="/admin/identity-governance" element={<IdentityGovernance />} />
                   <Route path="/admin/presentation" element={<PresentationDownload />} />
+                  <Route path="/ppt-builder" element={<PresentationBuilder />} />
                   <Route path="/resources/auth" element={<ResourceAuth />} />
                   <Route path="/user-guide" element={<UserGuidePage />} />
                   <Route path="*" element={<NotFound />} />
