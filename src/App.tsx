@@ -43,6 +43,7 @@ import Benchmarks from './pages/admin/Benchmarks';
 import NovelAlgorithmsDemo from './pages/admin/NovelAlgorithmsDemo';
 import IdentityGovernance from './pages/admin/IdentityGovernance';
 import PresentationDownload from './pages/admin/PresentationDownload';
+import PresentationBuilder from './pages/PresentationBuilder';
 import ArchitecturePage from './pages/Architecture';
 import DocumentationPage from './pages/Documentation';
 import UseCasesPage from './pages/UseCases';
